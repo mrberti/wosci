@@ -1,16 +1,21 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Wosci</title>
-		 <meta charset="UTF-8"> 
-    </head>
-	
-    <body style="background-color:#000; color:#AAA">
-	<canvas id="canvas" width="500px" height="500px" style="border: solid 1px #333; background-color: #111"></canvas>
-	<form>
-		<input id="btnClose" type="button" value="Close connection">
-	</form>
-	<p id="p">no data</p>
-	<script src="wosci.js"></script>
-    </body>
+  <head>
+    <title>Wosci</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="wosci.css">
+  </head>
+  
+  <body>
+  <canvas id="wosci_canvas" width="750px" height="500px"></canvas>
+  <form>
+    <input id="cbEnableGrid" type=checkbox value="Enable Grid">Enable Grid<br>
+    <input id="btnConnect" type="button" value="Connect">
+    <input id="btnClose" type="button" value="Close connection">
+  </form>
+  
+  <p id="p1">no data</p>
+  <p id="p2">no data</p>
+  <script src="wosci.js"></script>
+  </body>
 </html>
