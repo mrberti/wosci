@@ -6,7 +6,11 @@ var Wosci = {
         gridColor: "#444",
         gridLineDash: [2, 3],
         dataLineColor: ["#0066ff", "#ff4400","#ffcc00","#009900","#cc00ff","#00b8e6","#e6005c","#d9d9d9", "#00cc00", "#ff8000"],
-        //dataLineDash: [[1, 0],]
+        remoteAddress: "192.168.1.40",
+        remotePort: 5678,
+        serverString: function() {
+            return "ws://"+this.remoteAddress+":"+this.remotePort+"/";
+        }
     },
 
     init: function() {
@@ -26,12 +30,6 @@ var Wosci = {
             data = {};
             data.vectorCount =  parseInt(packet["data_vectors_count"]);
             data.vectors = packet["data_vectors"];
-            // this.values = Array();
-            // this.length = Array();
-            // for(var i = 1; i < this.data_vectors_count; i++) {
-            //     this.data.push(data_vectors[0]["values"]);
-            //     this.length.push(data_vectors[0]["length"]);
-            // }
             this.draw(data);
         }
     },
@@ -45,8 +43,9 @@ var Wosci = {
             }
         }
         /* Create a new websocket object and define callbacks */
-        this.websocket = new WebSocket("ws://127.0.0.1:5678/");
-        console.log("New Websocket created.");
+        serverString = this.settings.serverString();
+        this.websocket = new WebSocket(serverString);
+        console.log("New Websocket created to " + serverString);
         var self = this;
         p = document.getElementById("p1");
         this.websocket.onmessage = function(e) {
@@ -66,7 +65,7 @@ var Wosci = {
         try { 
             this.websocket.close();
         }
-        catch {
+        catch(error) {
             console.log("Could not close websocket.");
             return;
         }
@@ -136,6 +135,8 @@ document.getElementById("btnClose").onclick = function(e) {
 }
 
 document.getElementById("btnConnect").onclick = function(e) {
+    var remoteAddress = document.getElementById("edRemoteAddress").value;
+    Wosci.settings.remoteAddress = remoteAddress;
     Wosci.connectServer();
 }
 
