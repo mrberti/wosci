@@ -12,12 +12,23 @@ import logging
 import time
 import random
 import numpy as np
+#import socket
 from autobahn.asyncio.websocket import WebSocketServerProtocol, WebSocketServerFactory
+
+def get_ip(defaultIP="127.0.0.1", dns="1.1.1.1", port=80):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s: 
+            s.connect((dns, port))
+            ip = s.getsockname()[0]
+    except Exception as e:
+        ip = defaultIP
+        logging.warning("Could not get correct IP. Set to " + ip + ". " + str(e))
+    return ip
 
 class MyServerProtocol(WebSocketServerProtocol):
 
     def __init__(self):
-        pass
+        super().__init__()
 
     def onConnect(self, request):
         logging.info("Client connecting: {0}".format(request.peer))
@@ -61,7 +72,12 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s <%(levelname)s> %(message)s', level = logging.DEBUG)
     #logging.Formatter.converter = time.localtime
     logging.info('Starting server')
-    factory = WebSocketServerFactory(u"ws://127.0.0.1:5678")
+    #server_ip = get_ip("192.168.1.80")
+    server_ip = get_ip()
+    port = 5678
+    serverString = u"ws://"+server_ip+":"+str(port)
+    logging.info("Creating server on: " + serverString)
+    factory = WebSocketServerFactory(serverString)
     factory.protocol = MyServerProtocol
 
     loop = asyncio.get_event_loop()
