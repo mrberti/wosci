@@ -5,7 +5,7 @@ var Wosci = {
         borderColor: "#333",
         gridColor: "#444",
         gridLineDash: [2, 3],
-        dataLineColor: ["#0066ff", "#990000",],
+        dataLineColor: ["#0066ff", "#ff4400","#ffcc00","#009900","#cc00ff","#00b8e6","#e6005c","#d9d9d9", "#00cc00", "#ff8000"],
         //dataLineDash: [[1, 0],]
     },
 
@@ -16,18 +16,27 @@ var Wosci = {
         this.N_y = this.cvs.height;
     },
 
-    decodeMessage: function(event) {
-        var ctx = this.ctx;
+    messageHandler: function(event) {
         p = document.getElementById("p1");
         p.innerHTML = event.data;
         packet = JSON.parse(event.data);
 
-        this.data = packet["data"];
-        this.data_length = packet["data_length"];
-        this.draw();
+        message_type = packet["message_type"];
+        if(message_type == "data_vectors") {
+            data = {};
+            data.vectorCount =  parseInt(packet["data_vectors_count"]);
+            data.vectors = packet["data_vectors"];
+            // this.values = Array();
+            // this.length = Array();
+            // for(var i = 1; i < this.data_vectors_count; i++) {
+            //     this.data.push(data_vectors[0]["values"]);
+            //     this.length.push(data_vectors[0]["length"]);
+            // }
+            this.draw(data);
+        }
     },
 
-    connect: function() {
+    connectServer: function() {
         /* Check if the websocket is already up an running */
         if(this.websocket) {
             if(this.websocket.readyState == 1) {
@@ -39,20 +48,18 @@ var Wosci = {
         this.websocket = new WebSocket("ws://127.0.0.1:5678/");
         console.log("New Websocket created.");
         var self = this;
+        p = document.getElementById("p1");
         this.websocket.onmessage = function(e) {
-            self.decodeMessage(e);
+            self.messageHandler(e);
         };
         this.websocket.onerror = function(e) {
             p.innerHTML = JSON.stringify(e);
         };
         this.websocket.onclose = function (e) {
             console.log("Websocket Closed.");
-            p = document.getElementById("p1");
             p.innerHTML = "Connection Closed";
             alert("Connection Closed");
         }
-        console.log("Websocket callbacks connected.");
-        console.log(this.websocket);
     },
 
     close: function() {
@@ -89,30 +96,35 @@ var Wosci = {
         var ctx = this.ctx;
     },
 
-    drawData: function() {
-        var data_length = this.data_length;
-        if(!data_length)
-            return;
-        var data = this.data;
+    drawDataVectors: function(vectorCount, vectors) {
+        var length, values;
+        var delta_x;
         var N_y = this.N_y;
         var N_x = this.N_x;
-        var delta_x = Math.round(N_x/data_length);
-        this.ctx.beginPath();
-        this.ctx.strokeStyle = this.settings.dataLineColor[0];
-        this.ctx.setLineDash([]);
-        for(var x = 0; x < N_x; x += 1) {
-            this.ctx.lineTo(x*delta_x, N_y - Math.round(N_y*data[x]/1024));
+
+        for(var i_vec = 0; i_vec < vectorCount; i_vec++) {
+            length = vectors[i_vec]["length"];
+            values = vectors[i_vec]["values"];
+            //delta_x = Math.round(N_x / length);
+            delta_x = N_x / (length-1);
+            console.log(delta_x);
+            this.ctx.beginPath();
+            this.ctx.strokeStyle = this.settings.dataLineColor[i_vec];
+            this.ctx.setLineDash([]);
+            for(var x = 0; x < length; x += 1) {
+                this.ctx.lineTo(Math.round(x * delta_x), N_y - Math.round(N_y * values[x] / 1024));
+            }
+            this.ctx.stroke();
         }
-        this.ctx.stroke();
     },
 
-    draw: function() {
+    draw: function(data) {
         var N_x = this.N_x;
         var N_y = this.N_y;
         this.ctx.clearRect(0, 0, N_x, N_y);
         this.drawGrid();
         this.drawAxes();
-        this.drawData();
+        this.drawDataVectors(data.vectorCount, data.vectors);
     },
 };
 
@@ -124,7 +136,7 @@ document.getElementById("btnClose").onclick = function(e) {
 }
 
 document.getElementById("btnConnect").onclick = function(e) {
-    Wosci.connect();
+    Wosci.connectServer();
 }
 
 Wosci.init();
