@@ -8,8 +8,10 @@ requires autobahn
 
 import json
 import logging
+import time
 import numpy as np
 import socket
+
 import asyncio
 from autobahn.asyncio.websocket import WebSocketServerProtocol, WebSocketServerFactory
 
@@ -28,6 +30,53 @@ def getIP(defaultIP="127.0.0.1", dns="1.1.1.1", port=80):
         logging.warning("Could not get the correct IP. Using default: " + ip + ". " + str(e))
     return ip
 
+class WosciServer():
+    """This class acts as the main Wosci Server object.
+    """
+
+    def __init__(self, webSocket=None):
+        self.webSocket = webSocket
+        self.running = False
+
+    def sendPacket(self, data):
+        self.webSocket.sendMessage(json.dumps(data).encode("UTF-8"))
+
+    async def run(self):
+        self.running = True
+        # Create welcome message and send to client
+        logging.info("Running wosci server")
+        packet = dict()
+        packet["message_type"] = "message"
+        packet["message"] = "Welcome to the Autobahn server."
+        self.sendPacket(packet)
+        await asyncio.sleep(.1)
+
+        while self.running:
+            try:
+                # Create sample data and send to client
+                packet = dict()
+                packet["message_type"] = "data_vectors"
+                packet["data_vectors_count"] = 10
+                data_vectors = []
+                for i in range(0,packet["data_vectors_count"]):
+                    np_data = np.random.randint(low=100*i,high=100*(i+1),size=101)
+                    data = np_data.tolist()
+                    l = dict()
+                    l["label"] = str(i)
+                    l["unit"] = "V"
+                    l["length"] = len(data)
+                    l["values"] = data
+                    data_vectors.append(l)
+                packet["data_vectors"] = data_vectors
+                await asyncio.sleep(.05)
+                self.sendPacket(packet)
+            except Exception as e:
+                logging.error(str(e))
+                self.running = False
+    
+    def stop(self):
+        self.running = False
+
 class WosciServerProtocol(WebSocketServerProtocol):
     """This class implements the Autobahn websocket protocol.
     """
@@ -35,40 +84,14 @@ class WosciServerProtocol(WebSocketServerProtocol):
     def __init__(self):
         super().__init__()
 
-    def sendPacket(self, data):
-        self.sendMessage(json.dumps(data).encode("UTF-8"))
-
     def onConnect(self, request):
         logging.info("New client connected: " + request.peer)
 
     async def onOpen(self):
         logging.info("WebSocket connection open.")
-        
-        # Create welcome message and send to client
-        packet = dict()
-        packet["message_type"] = "message"
-        packet["message"] = "Welcome to the Autobahn server."
-        self.sendPacket(packet)
-        await asyncio.sleep(.4)
-
-        while True:
-            # Create sample data and send to client
-            packet = dict()
-            packet["message_type"] = "data_vectors"
-            packet["data_vectors_count"] = 10
-            data_vectors = []
-            for i in range(0,packet["data_vectors_count"]):
-                np_data = np.random.randint(low=100*i,high=100*(i+1),size=101)
-                data = np_data.tolist()
-                l = dict()
-                l["label"] = str(i)
-                l["unit"] = "V"
-                l["length"] = len(data)
-                l["values"] = data
-                data_vectors.append(l)
-            packet["data_vectors"] = data_vectors
-            await asyncio.sleep(.05)
-            self.sendPacket(packet)
+        self.wosci = WosciServer(self)
+        await self.wosci.run()
+        logging.info("Wosci finished.")
 
     def onMessage(self, payload, isBinary):
         if isBinary:
@@ -77,7 +100,9 @@ class WosciServerProtocol(WebSocketServerProtocol):
             logging.info("Text message received: " + payload.decode('utf8'))
 
     def onClose(self, wasClean, code, reason):
-        logging.info("WebSocket connection closed: " + reason)
+        logging.info("WebSocket connection closed. Reason: " + str(reason))
+        self.wosci.stop()
+        del self.wosci
 
 if __name__ == '__main__':
     logging.info('Starting server')
@@ -85,6 +110,7 @@ if __name__ == '__main__':
     port = 5678
     serverString = u"ws://" + localIP + ":" + str(port)
     logging.info("Creating server on: " + serverString)
+
 
     factory = WebSocketServerFactory(serverString)
     factory.protocol = WosciServerProtocol
@@ -96,9 +122,10 @@ if __name__ == '__main__':
     try:
         asyncioLoop.run_forever()
     except KeyboardInterrupt:
-        pass
+        logging.warning("Received KeyboardInterrupt. Closing server.")
     finally:
         logging.info("Closing server...")
         server.close()
         asyncioLoop.close()
+        time.sleep(2)
         logging.info("Bye bye!")
