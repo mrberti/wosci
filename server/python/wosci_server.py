@@ -1,25 +1,34 @@
-"""
-Sample code for using websockets with Autobahn.
+"""This Python module acts as the main server for the frontend. The 
+communication protocol is based on websockets from the autobahn implementation.
+
+Due to the use of python's asyncio library, python3.4 is required.
 
 requires autobahn
-
-> pip install autobahn
+$ pip install autobahn
 """
 
 import json
 import logging
+logging.basicConfig(format='%(asctime)s <%(levelname)s> %(message)s', 
+    level = logging.DEBUG)
 import time
-import numpy as np
 import socket
 
-import asyncio
-from autobahn.asyncio.websocket import WebSocketServerProtocol, WebSocketServerFactory
-
-logging.basicConfig(format='%(asctime)s <%(levelname)s> %(message)s', level = logging.DEBUG)
+try:
+    # Import non-standard dependencies
+    import numpy as np
+    import asyncio
+    from autobahn.asyncio.websocket import (WebSocketServerProtocol, 
+        WebSocketServerFactory)
+except:
+    logging.error("Required packages: numpy, asyncio, autobahn")
+    exit()
 
 def getIP(defaultIP="127.0.0.1", dns="1.1.1.1", port=80):
     """Try to establish a connection to a DNS server and get the local IP from 
     the socket name.
+
+    Requires python3 to use socket in context with 'with'.
     """
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: 
@@ -27,7 +36,8 @@ def getIP(defaultIP="127.0.0.1", dns="1.1.1.1", port=80):
             ip = s.getsockname()[0]
     except Exception as e:
         ip = defaultIP
-        logging.warning("Could not get the correct IP. Using default: " + ip + ". " + str(e))
+        logging.warning("Could not get the correct IP. Using default: " + ip + 
+            ". " + str(e))
     return ip
 
 class WosciServer():
@@ -59,7 +69,8 @@ class WosciServer():
                 packet["data_vectors_count"] = 10
                 data_vectors = []
                 for i in range(0,packet["data_vectors_count"]):
-                    np_data = np.random.randint(low=100*i,high=100*(i+1),size=101)
+                    np_data = np.random.randint(low=100*i, high=100*(i+1), 
+                        size=101)
                     data = np_data.tolist()
                     l = dict()
                     l["label"] = str(i)
@@ -73,6 +84,7 @@ class WosciServer():
             except Exception as e:
                 logging.error(str(e))
                 self.running = False
+        logging.debug("Wosci run() finished ordinarily.")
     
     def stop(self):
         self.running = False
@@ -81,17 +93,22 @@ class WosciServerProtocol(WebSocketServerProtocol):
     """This class implements the Autobahn websocket protocol.
     """
 
+    connectionCount = 0
+
     def __init__(self):
         super().__init__()
 
     def onConnect(self, request):
-        logging.info("New client connected: " + request.peer)
+        self.peer = request.peer
+        WosciServerProtocol.connectionCount = \
+            WosciServerProtocol.connectionCount + 1
+        logging.info("New client connected: " + self.peer + ". Active "
+            "connections: " + str(WosciServerProtocol.connectionCount))
 
     async def onOpen(self):
-        logging.info("WebSocket connection open.")
+        logging.info("WebSocket connection open: " + self.peer)
         self.wosci = WosciServer(self)
         await self.wosci.run()
-        logging.info("Wosci finished.")
 
     def onMessage(self, payload, isBinary):
         if isBinary:
@@ -100,23 +117,26 @@ class WosciServerProtocol(WebSocketServerProtocol):
             logging.info("Text message received: " + payload.decode('utf8'))
 
     def onClose(self, wasClean, code, reason):
-        logging.info("WebSocket connection closed. Reason: " + str(reason))
         self.wosci.stop()
         del self.wosci
+        WosciServerProtocol.connectionCount = \
+            WosciServerProtocol.connectionCount - 1
+        logging.info("WebSocket connection closed. " + self.peer + ". Reason: "
+             + str(reason) + ". Active connections: "
+             + str(WosciServerProtocol.connectionCount))
 
-if __name__ == '__main__':
+def main():
     logging.info('Starting server')
     localIP = getIP()
     port = 5678
     serverString = u"ws://" + localIP + ":" + str(port)
     logging.info("Creating server on: " + serverString)
 
-
     factory = WebSocketServerFactory(serverString)
     factory.protocol = WosciServerProtocol
 
     asyncioLoop = asyncio.get_event_loop()
-    coRoutine = asyncioLoop.create_server(factory, '0.0.0.0', port)
+    coRoutine = asyncioLoop.create_server(factory, host=None, port=port)
     server = asyncioLoop.run_until_complete(coRoutine)
 
     try:
@@ -126,6 +146,8 @@ if __name__ == '__main__':
     finally:
         logging.info("Closing server...")
         server.close()
-        asyncioLoop.close()
-        time.sleep(2)
+        asyncioLoop.stop()
         logging.info("Bye bye!")
+
+if __name__ == '__main__':
+    main()

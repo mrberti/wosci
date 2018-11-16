@@ -1,71 +1,128 @@
+import logging
+logging.basicConfig(format='%(asctime)s <%(levelname)s> %(message)s', level = 
+    logging.DEBUG)
 import socket
 import time
 import sys
 import threading
+import random
+import re
 
 def get_ip(dns="1.1.1.1", port=80):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s: 
-            s.connect((dns, port))
-            ip = s.getsockname()[0]
-    except:
+        s.connect((dns, port))
+        ip = s.getsockname()[0]
+    except Exception as e:
         ip = "127.0.0.1"
-        print("warning: Could not get correct IP. Set to " + ip)
+        logging.warning("Could not get correct IP. Set to " + ip + ". " 
+            + str(e))
+    finally:
+        s.close()
     return ip
 
-ip_dest = "192.168.1.80"
-ip_local = get_ip()
-port = 5005
+class WosciSCPI():
+    settings = {}
+    def __init__(self):
+        pass
 
-sock_send =  socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock_recv =  socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock_recv.bind((ip_local, port))
-print("Bind receiver to: " + ip_local + ":" + str(port))
+class WosciSignalGenerator():
+    def __init__(self):
+        self.sockReceiver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sockSender =  socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.localHost = None
+        self.localPort = None
+        self.destHost = None
+        self.destPort = None
+        self.threadEvent = threading.Event()
+        self.threadListener = threading.Thread(name='_messageHandler', 
+            target=self._messageHandler, args=(self.threadEvent,))
+        self.threadSender = threading.Thread(name='_senderHandler', 
+            target=self._senderHandler, args=(self.threadEvent,))
+        # Set the threads as daemon so we can forget about them
+        self.threadListener.daemon = True
+        self.threadSender.daemon = True
 
-def send_data(data):
-    data_str = str(data) + "\n"
-    message = data_str.encode('UTF-8')
-    sock_send.sendto(message, (ip_dest, port))
+    def __del__(self):
+        if self.sockReceiver:
+            self.sockReceiver.close()
+        if self.sockSender:
+            self.sockSender.close()
+        logging.info("Signal generator deleted")
 
-def data_producer(event):
-    print("Started data producer thread.")
-    data = 0
-    while True:
-        if event.is_set():
-            data = data + 1
-            send_data(data)
-        time.sleep(.1)
+    def startListener(self, localHost="127.0.0.1", localPort=5005):
+        logging.info("Bind listener to: " + str(localHost) + ":" 
+            + str(localPort))
+        try:
+            self.sockReceiver.bind((localHost, localPort))
+        except Exception as e:
+            logging.error("Could not bind to socket. " + str(e))
+        if not self.threadListener.isAlive():
+            self.threadListener.start()
 
-def data_consumer(event):
-    print("Started consumer thread.")
-    while True:
-        data = ""
-        data, addr = sock_recv.recvfrom(1024)
-        received_str = data.decode('UTF-8')
-        print(received_str)
-        if "start" in received_str.lower():
-            event.set()
-            print("data producer started")
-        elif "stop" in received_str.lower():
-            event.clear()
-            print("data producer stopped")
+    def startSender(self, destHost, destPort=5006):
+        self.destHost = destHost
+        self.destPort = destPort
+        logging.debug("Started sending to: " + str(self.destHost) + ":" 
+            + str(self.destPort))
+        if not self.threadSender.isAlive():
+            self.threadSender.start()
 
+    def _messageHandler(self, event):
+        logging.debug("Started message Handler thread.")
+        while True:
+            try:
+                # The message handler thread will be caught in this blocking
+                # call and wait for messages forever
+                finish_recv = False
+                data, addr = self.sockReceiver.recvfrom(10240)
+                while not finish_recv:
+                    if not "\n" in data:
+                        logging.debug("Did not receive EOL character." 
+                            + repr(data))
+                        data = data + self.sockReceiver.recv(10240)
+                    else:
+                        finish_recv = True
+                logging.debug("Receive complete: " + repr(data))
+            except Exception as e:
+                logging.error(str(e))
+                continue
+            cmd = data.decode('UTF-8').upper()
+            
+            if re.match(r"\*IDN\?", cmd):
+                retStr = "WOSCISIGNALGEN,V0.0\n"
+                logging.debug(repr(retStr))
+                self.sockSender.sendto(retStr.encode('UTF-8'), addr)
+            if re.match(r"\*RST", cmd):
+                logging.debug("*RST")
+                #event.set()
+                #destHost = addr[0]
+                #self.startSender(destHost)
+            #elif "stop" in cmd:
+            #    event.clear()
+
+    def _senderHandler(self, event):
+        logging.debug("Started sender Handler thread. Host: " + self.destHost 
+            + ":" + str(self.destPort))
+        data = 0
+        while True:
+            if event.is_set():
+                data = random.randint(0,1024)
+                data_str = str(data) + "\n"
+                message = data_str.encode('UTF-8')
+                self.sockSender.sendto(message, (self.destHost, self.destPort))
+            time.sleep(.1)
 
 if __name__ == "__main__":
-    event = threading.Event()
-    t_producer = threading.Thread(name='data_producer', target=data_producer, args=(event,))
-    t_consumer = threading.Thread(name='data_consumer', target=data_consumer, args=(event,))
-    t_producer.daemon = True
-    t_consumer.daemon = True
-    t_producer.start()
-    t_consumer.start()
-    event.set()
+    localHost = get_ip()
+    localPort = 5005
+
+    w = WosciSignalGenerator()
+    w.startListener(localHost, localPort)
+    
     while True:
         try:
             time.sleep(1)
-        except:
+        except KeyboardInterrupt:
+            logging.warning("Received KeyboardInterrupt")
             break
-    print("Closing connection.")
-    sock_send.close()
-    sock_recv.close()
-    

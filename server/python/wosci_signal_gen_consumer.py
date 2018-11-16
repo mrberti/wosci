@@ -10,7 +10,8 @@ def get_ip(dns="1.1.1.1", port=80):
         print("warning: Could not get correct IP. Set to " + ip)
     return ip
 
-udp_ip = get_ip()
+#udp_ip = get_ip()
+udp_ip = "127.0.0.1"
 udp_port = 5005
 
 try:
