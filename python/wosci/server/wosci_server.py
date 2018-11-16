@@ -9,10 +9,10 @@ $ pip install autobahn
 
 import json
 import logging
-logging.basicConfig(format='%(asctime)s <%(levelname)s> %(message)s', 
-    level = logging.DEBUG)
 import time
 import socket
+
+from .. import utils
 
 try:
     # Import non-standard dependencies
@@ -23,22 +23,6 @@ try:
 except:
     logging.error("Required packages: numpy, asyncio, autobahn")
     exit()
-
-def getIP(defaultIP="127.0.0.1", dns="1.1.1.1", port=80):
-    """Try to establish a connection to a DNS server and get the local IP from 
-    the socket name.
-
-    Requires python3 to use socket in context with 'with'.
-    """
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: 
-            s.connect((dns, port))
-            ip = s.getsockname()[0]
-    except Exception as e:
-        ip = defaultIP
-        logging.warning("Could not get the correct IP. Using default: " + ip + 
-            ". " + str(e))
-    return ip
 
 class WosciServer():
     """This class acts as the main Wosci Server object.
@@ -125,9 +109,13 @@ class WosciServerProtocol(WebSocketServerProtocol):
              + str(reason) + ". Active connections: "
              + str(WosciServerProtocol.connectionCount))
 
-def main():
+def run_server():
+    logging.basicConfig(
+        format='%(asctime)s <%(levelname)s> %(message)s', 
+        level=logging.DEBUG, 
+    )
     logging.info('Starting server')
-    localIP = getIP()
+    localIP = utils.get_local_ip()
     port = 5678
     serverString = u"ws://" + localIP + ":" + str(port)
     logging.info("Creating server on: " + serverString)
@@ -148,6 +136,3 @@ def main():
         server.close()
         asyncioLoop.stop()
         logging.info("Bye bye!")
-
-if __name__ == '__main__':
-    main()
