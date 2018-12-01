@@ -3,6 +3,7 @@ import socket
 
 from .. import utils
 
+
 class WosciDataHandlerUDP():
     def __init__(self):
         self.sock_receiver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -17,7 +18,7 @@ class WosciDataHandlerUDP():
     
     def get_data(self, size=1024):
         self.sock_receiver.settimeout(1)
-        data, addr = self.sock_receiver.recvfrom(size)
+        data = self.sock_receiver.recvfrom(size)[0]
         return data
 
     def send_data(self, data, destHost="127.0.0.1", destPort=5005):

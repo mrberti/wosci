@@ -3,4 +3,3 @@
 from . import daq
 from . import server
 from . import utils
-from . import settings

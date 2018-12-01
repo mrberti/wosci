@@ -6,7 +6,7 @@ import threading
 import random
 import re
 
-from .. import settings
+from . import daqsettings
 from .. import utils
 
 
@@ -43,7 +43,7 @@ class WosciSignalGenerator(object):
 
     def start_listener(self, 
             local_host="127.0.0.1", 
-            local_port=settings.SIGNAL_GENERATOR_UDP_PORT_LISTEN):
+            local_port=daqsettings.SIGNAL_GENERATOR_UDP_PORT_LISTEN):
         logging.info("Bind listener to: {}:{}"
             .format(str(local_host), str(local_port))
         )
@@ -53,7 +53,7 @@ class WosciSignalGenerator(object):
 
     def start_sender(self, 
             dest_host, 
-            dest_port=settings.SIGNAL_GENERATOR_UDP_PORT_SEND):
+            dest_port=daqsettings.SIGNAL_GENERATOR_UDP_PORT_SEND):
         self.dest_host = dest_host
         self.dest_port = dest_port
         logging.debug("Started sending to: " + str(self.dest_host) + ":" 
@@ -111,7 +111,7 @@ class WosciSignalGenerator(object):
 def run_wosci_signal_generator():
     logging.basicConfig(level=logging.DEBUG)
     local_host = utils.get_local_ip()
-    local_port = settings.SIGNAL_GENERATOR_UDP_PORT_LISTEN
+    local_port = daqsettings.SIGNAL_GENERATOR_UDP_PORT_LISTEN
 
     w = WosciSignalGenerator()
     w.start_listener(local_host, local_port)
