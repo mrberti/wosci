@@ -1,0 +1,14 @@
+{
+  "name": "wosci",
+  "version": "0.0.1",
+  "description": "An oscilloscope app based on Electron framework",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "Simon Bertling <simon.bertling@gmx.de>",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^3.0.10"
+  }
+}
