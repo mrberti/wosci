@@ -2,6 +2,7 @@
   "name": "wosci",
   "version": "0.0.1",
   "description": "An oscilloscope app based on Electron framework",
+  "repository": "https://github.com/mrberti/wosci",
   "main": "main.js",
   "scripts": {
     "start": "electron ."
