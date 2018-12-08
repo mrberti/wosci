@@ -1,11 +1,16 @@
 var Wosci = {
     settings: {
         canvasId: "wosci_canvas",
+        /* Plot settings*/
+        yLimMin: 0,
+        yLimMax: 100,
+        /* Style settings */
         backgroundColor: "#111",
         borderColor: "#333",
         gridColor: "#444",
         gridLineDash: [2, 3],
         dataLineColor: ["#0066ff", "#ff4400","#ffcc00","#009900","#cc00ff","#00b8e6","#e6005c","#d9d9d9", "#00cc00", "#ff8000"],
+        /* Server settings */
         remoteAddress: "192.168.1.40",
         remotePort: 5679,
         serverString: function() {
@@ -93,25 +98,33 @@ var Wosci = {
 
     drawAxes: function() {
         var ctx = this.ctx;
+        N_x = this.N_x;
+        N_y = this.N_y;
+        ctx.font="12px Arial";
+        ctx.fillStyle = this.settings.gridColor;
+        ctx.fillText(`${this.settings.yLimMax}`, 2, 12);
+        ctx.fillText(`${this.settings.yLimMin}`, 2, N_y-2);
     },
 
     drawDataVectors: function(vectorCount, vectors) {
         var length, values;
         var delta_x;
-        var N_y = this.N_y;
         var N_x = this.N_x;
+        var N_y = this.N_y;
+        var yLimMax = this.settings.yLimMax;
+        var yLimMin = this.settings.yLimMin;
+        var yLimDelta = yLimMax - yLimMin;
 
         for(var i_vec = 0; i_vec < vectorCount; i_vec++) {
             length = vectors[i_vec]["length"];
             values = vectors[i_vec]["values"];
-            //delta_x = Math.round(N_x / length);
             delta_x = N_x / (length-1);
-            console.log(delta_x);
             this.ctx.beginPath();
             this.ctx.strokeStyle = this.settings.dataLineColor[i_vec];
             this.ctx.setLineDash([]);
             for(var x = 0; x < length; x += 1) {
-                this.ctx.lineTo(Math.round(x * delta_x), N_y - Math.round(N_y * values[x] / 1024));
+                y = Math.round((values[x]-yLimMin) / yLimDelta * N_y)
+                this.ctx.lineTo(Math.round(x * delta_x), N_y - y);
             }
             this.ctx.stroke();
         }
@@ -140,5 +153,13 @@ document.getElementById("btnConnect").onclick = function(e) {
     Wosci.connectServer();
 }
 
+document.getElementById("edYMax").onchange = function(e) {
+    Wosci.settings.yLimMax = document.getElementById("edYMax").value;
+}
+
+document.getElementById("edYMin").onchange = function(e) {
+    Wosci.settings.yLimMin = document.getElementById("edYMin").value;
+}
+
 Wosci.init();
-console.log(JSON.stringify(Wosci));
+// console.log(JSON.stringify(Wosci));
