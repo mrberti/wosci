@@ -11,5 +11,8 @@
   "license": "MIT",
   "devDependencies": {
     "electron": "^3.0.10"
+  },
+  "dependencies": {
+    "websocket": "^1.0.28"
   }
 }

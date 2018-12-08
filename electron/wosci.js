@@ -7,7 +7,7 @@ var Wosci = {
         gridLineDash: [2, 3],
         dataLineColor: ["#0066ff", "#ff4400","#ffcc00","#009900","#cc00ff","#00b8e6","#e6005c","#d9d9d9", "#00cc00", "#ff8000"],
         remoteAddress: "192.168.1.40",
-        remotePort: 5678,
+        remotePort: 5679,
         serverString: function() {
             return "ws://"+this.remoteAddress+":"+this.remotePort+"/";
         }

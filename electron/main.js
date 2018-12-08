@@ -1,18 +1,31 @@
-const {app, BrowserWindow} = require('electron')
+"use strict"
+
+const {app, BrowserWindow, Menu} = require('electron')
+const ws = require('./wshandler')
 
 let win
 
 function createWindow() {
-	win = new BrowserWindow({
-		width: 800,
-		height: 600
-	})
-	win.loadFile('wosci.html')
+    win = new BrowserWindow({
+        width: 800,
+        height: 800,
+        resizable: false,
+        show: false,
+    })
+    win.loadFile('wosci.html')
 
-	win.on('closed', () => {
-		win = null
-	})
+    win.on('closed', () => {
+        win = null
+    })
 
+    // Menu.setApplicationMenu(null)
+
+    win.once('ready-to-show', () => {
+        win.show()
+    })
 }
 
-app.on('ready', createWindow)
+app.on('ready', () => {
+    createWindow()
+    ws.createWebsocketServer()
+})
