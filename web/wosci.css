@@ -21,7 +21,7 @@ body {
     right: 0px;
     bottom: 0px;
     z-index: 1000;
-    transition: opacity .3s, background-color .3s;
+    transition: display .3s, background-color .3s;
 }
 
 .message.error {
@@ -41,7 +41,7 @@ body {
 
 .message.hidden {
     /* visibility: hidden; */
-    opacity: 0;
+    display: none;
 }
 
 .navbar {
@@ -64,12 +64,13 @@ body {
 }
 
 .navbar li {
-    margin-right: .5em;
+    padding: 10px;
 }
 
 .navbar li:hover {
     cursor: pointer;
-    text-decoration: underline;
+    background: darkblue;
+    /* text-decoration: underline; */
     /* border-bottom: white 2px solid; */
 }
 
@@ -88,25 +89,39 @@ body {
     left: 0px;
     height: 100%;
     z-index: 500;
-    padding-top: 50px;
-    transition: opacity .1s;
-    /* border-right: darkblue solid 1px; */
+    padding-top: 80px;
+    transition: left .3s;
 }
 
 .sidebar.hidden {
-    opacity: 0;
+    left: -200px;
+    /* display: none; */
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0em;
+    margin: 0em;
+    /* display: inline-flex; */
+}
+
+.sidebar li {
+    padding: 10px;
+}
+
+.sidebar li:hover {
+    cursor: pointer;
+    background: darkblue;
+    /* text-decoration: underline; */
+    /* border-bottom: white 2px solid; */
 }
 
 .footer {
     background: #06f;
     color: #fff;
-    /* position: relative; */
-    /* display: flex; */
     left: 0;
     right: 0;
-    /* bottom: 0; */
-    /* width: 100%; */
-    /* margin: 0; */
+    bottom: 0;
     padding: 1em;
     text-align: center;
 }
@@ -115,6 +130,7 @@ body {
     color: #fff;
     font-weight: bold;
     text-decoration: none;
+    box-shadow: 0 100vh 0 100vh #06f; /* Footer until end of page*/
 }
 
 .footer a:hover {
