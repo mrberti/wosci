@@ -5,20 +5,54 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="wosci.css">
   </head>
-  
+
   <body>
-  <canvas id="wosci_canvas" width="750px" height="500px"></canvas>
-  <form>
-    <br>
-    <input id="edRemoteAddress" type="input" value="192.168.1.40">
-    <input id="btnConnect" type="button" value="Connect">
-    <input id="btnClose" type="button" value="Close connection"><br>
-    <br>
-    <input id="cbEnableGrid" type=checkbox value="Enable Grid">Enable Grid<br>
-  </form>
+    <div id="message" class="div-message hidden"></div>
+
+    <div id="navbar" class="navbar">
+      <header>
+        <button id="logo" class="logo">wOsci</button>
+        <!-- <span class="logo">wOsci</span> -->
+        <ul>
+          <li>Nav Item</li>
+          <li>Nav Item</li>
+          <input id="edRemoteAddress" type="input" value="192.168.1.40" style="width: 100px;">
+          <input id="btnConnect" type="button" value="Connect">
+          <input id="btnClose" type="button" value="Close connection">
+        </ul>
+      </header>
+    </div>
+
+    <div id="sidebar" class="sidebar hidden">
+      <ul>
+        <li>Sidebar Item 1</li>
+        <li>Sidebar Item 2</li>
+        <li>Sidebar Item 3</li>
+      </ul>
+    </div>
+
+    <div class="content">
+      <div>
+        <canvas id="wosci_canvas" width="750px" height="500px"></canvas>
+      </div>
+      <div>
+          <span class="badge">Y-Min</span><input id="edYMin" type="number" value="0" step="any" style="width: 50px;"><br>
+          <span class="badge">Y-Max</span><input id="edYMax" type="number" value="100" step="any" style="width: 50px;"><br>
+          <input id="cbEnableGrid" type=checkbox value="Enable Grid">Enable Grid<br>
+      </div>
+      <div>
+        <p id="p1">no data</p>
+        <p id="p2">no data</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <footer>
+          <a href="https://github.com/mrberti/wosci">wOsci</a>
+          <br>Source available on GitHub
+      </footer>
+    </div>
   
-  <p id="p1">no data</p>
-  <p id="p2">no data</p>
   <script src="wosci.js"></script>
   </body>
 </html>

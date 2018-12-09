@@ -1,10 +1,145 @@
 body {
     background-color: black;
     color:#AAA;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
 }
 
 #wosci_canvas {
     background-color: #111;
     border: solid 1px #333;    
+}
+
+.message {
+    position: fixed;
+    background: black;
+    width: 150px;
+    padding: 10px;
+    margin: 10px;
+    color: #DDD;
+    font-size: 12px;
+    right: 0px;
+    bottom: 0px;
+    z-index: 1000;
+    transition: opacity .3s, background-color .3s;
+}
+
+.message.error {
+    border-left: darkred solid 3px;
+    background: #400;
+}
+
+.message.warning {
+    border-left: yellow solid 3px;
+    background: darkgoldenrod;
+}
+
+.message.info {
+    border-left: #06f solid 3px;
+    background: darkblue;
+}
+
+.message.hidden {
+    /* visibility: hidden; */
+    opacity: 0;
+}
+
+.navbar {
+    background: #06f;
+    color: white;
+    border-bottom: darkblue solid 4px;
+    position: fixed;
+    width: 100%;
+    top: 0px;
+    left: 0px;
+    z-index: 1000;
+    margin: 0;
+}
+
+.navbar ul {
+    list-style-type: none;
+    padding: 0em;
+    margin: 0em;
+    display: inline-flex;
+}
+
+.navbar li {
+    margin-right: .5em;
+}
+
+.navbar li:hover {
+    cursor: pointer;
+    text-decoration: underline;
+    /* border-bottom: white 2px solid; */
+}
+
+.content {
+    padding-top: 60px;
+    /* margin-top: 60px; */
+    margin-left: 10px;
+}
+
+.sidebar {
+    background: #06f;
+    color: #fff;
+    position: fixed;
+    overflow: auto;
+    width: 200px;
+    left: 0px;
+    height: 100%;
+    z-index: 500;
+    padding-top: 50px;
+    transition: opacity .1s;
+    /* border-right: darkblue solid 1px; */
+}
+
+.sidebar.hidden {
+    opacity: 0;
+}
+
+.footer {
+    background: #06f;
+    color: #fff;
+    /* position: relative; */
+    /* display: flex; */
+    left: 0;
+    right: 0;
+    /* bottom: 0; */
+    /* width: 100%; */
+    /* margin: 0; */
+    padding: 1em;
+    text-align: center;
+}
+
+.footer a {
+    color: #fff;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    /* color: #AAA; */
+    text-decoration: underline;
+}
+
+.badge {
+    display: inline-block;
+    /* background: #AAA; */
+    /* color: #333; */
+    min-width: 70px;
+}
+
+.logo {
+    font-weight: bold;
+    font-size: inherit;
+    
+    -moz-user-focus: ignore;
+    display: inline-block;
+    padding: 10px;
+    background: darkblue;
+    color: #fff;
+    cursor: pointer;
+    
+    border: none;
+    outline: 0;
 }

@@ -1,13 +1,18 @@
 var Wosci = {
     settings: {
         canvasId: "wosci_canvas",
+        /* Plot settings*/
+        yLimMin: 0,
+        yLimMax: 100,
+        /* Style settings */
         backgroundColor: "#111",
         borderColor: "#333",
         gridColor: "#444",
         gridLineDash: [2, 3],
-        dataLineColor: ["#0066ff", "#ff4400","#ffcc00","#009900","#cc00ff","#00b8e6","#e6005c","#d9d9d9", "#00cc00", "#ff8000"],
+        dataLineColor: ["#0066ff","#ff4400","#ffcc00","#009900","#cc00ff","#00b8e6","#e6005c","#d9d9d9", "#00cc00", "#ff8000"],
+        /* Server settings */
         remoteAddress: "192.168.1.40",
-        remotePort: 5678,
+        remotePort: 5679,
         serverString: function() {
             return "ws://"+this.remoteAddress+":"+this.remotePort+"/";
         }
@@ -57,7 +62,6 @@ var Wosci = {
         this.websocket.onclose = function (e) {
             console.log("Websocket Closed.");
             p.innerHTML = "Connection Closed";
-            alert("Connection Closed");
         }
     },
 
@@ -93,25 +97,37 @@ var Wosci = {
 
     drawAxes: function() {
         var ctx = this.ctx;
+        N_x = this.N_x;
+        N_y = this.N_y;
+        yLimMax = this.settings.yLimMax;
+        yLimMin = this.settings.yLimMin
+        yLimHalf = (yLimMax-yLimMin)/2 + this.settings.yLimMin;
+        ctx.font="12px Arial";
+        ctx.fillStyle = this.settings.gridColor;
+        ctx.fillText(`${yLimMax}`, 2, 12);
+        ctx.fillText(`${yLimMin}`, 2, N_y-2);
+        ctx.fillText(`${yLimHalf}`, 2, N_y/2 - 5);
     },
 
     drawDataVectors: function(vectorCount, vectors) {
         var length, values;
         var delta_x;
-        var N_y = this.N_y;
         var N_x = this.N_x;
+        var N_y = this.N_y;
+        var yLimMax = this.settings.yLimMax;
+        var yLimMin = this.settings.yLimMin;
+        var yLimDelta = yLimMax - yLimMin;
 
         for(var i_vec = 0; i_vec < vectorCount; i_vec++) {
             length = vectors[i_vec]["length"];
             values = vectors[i_vec]["values"];
-            //delta_x = Math.round(N_x / length);
             delta_x = N_x / (length-1);
-            console.log(delta_x);
             this.ctx.beginPath();
             this.ctx.strokeStyle = this.settings.dataLineColor[i_vec];
             this.ctx.setLineDash([]);
             for(var x = 0; x < length; x += 1) {
-                this.ctx.lineTo(Math.round(x * delta_x), N_y - Math.round(N_y * values[x] / 1024));
+                y = Math.round((values[x]-yLimMin) / yLimDelta * N_y)
+                this.ctx.lineTo(Math.round(x * delta_x), N_y - y);
             }
             this.ctx.stroke();
         }
@@ -127,18 +143,41 @@ var Wosci = {
     },
 };
 
-/*
- * Main handling
- */
+
+function displayMessage(type, message) {
+    document.getElementById("message").innerHTML = message;
+    document.getElementById("message").className = `message ${type}`;
+    setTimeout(() => document.getElementById("message").className = "message hidden", 3000);
+}
+
 document.getElementById("btnClose").onclick = function(e) {
     Wosci.close();
+    displayMessage("warning", "Connection closed");
 }
 
 document.getElementById("btnConnect").onclick = function(e) {
     var remoteAddress = document.getElementById("edRemoteAddress").value;
     Wosci.settings.remoteAddress = remoteAddress;
     Wosci.connectServer();
+    displayMessage("info", "Connected");
 }
 
+document.getElementById("edYMax").onchange = function(e) {
+    Wosci.settings.yLimMax = parseFloat(document.getElementById("edYMax").value);
+}
+
+document.getElementById("edYMin").onchange = function(e) {
+    Wosci.settings.yLimMin = parseFloat(document.getElementById("edYMin").value);
+}
+
+document.getElementById("logo").onclick = function(e) {
+    var cls = document.getElementById("sidebar").className;
+    if (cls == "sidebar hidden")
+        cls = "sidebar";
+    else
+        cls = "sidebar hidden";
+    document.getElementById("sidebar").className = cls;
+}
+
+/* Start Wosci */
 Wosci.init();
-console.log(JSON.stringify(Wosci));

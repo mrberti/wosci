@@ -12,7 +12,7 @@ function createWindow() {
         resizable: false,
         show: false,
     })
-    win.loadFile("wosci.html");
+    win.loadFile("../web/wosci.html");
 
     win.on("closed", () => {
         win = null;
