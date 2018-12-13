@@ -5,49 +5,56 @@ body {
     margin: 0;
 }
 
-#wosci_canvas {
-    background-color: #111;
-    border: solid 1px #333;    
-}
-
-.message {
-    position: fixed;
-    background: black;
-    width: 150px;
-    padding: 10px;
-    margin: 10px;
+/*
+    MESSAGE-LIST
+*/
+.message-list {
+    /* background: black; */
+    display: inline-block;
     color: #DDD;
+    position: fixed;
+    padding: 0;
+    margin: 0;
     font-size: 12px;
     right: 0px;
-    bottom: 0px;
-    z-index: 1000;
-    transition: display .3s, background-color .3s;
+    z-index: 700;
+    list-style-type: none;
 }
 
-.message.error {
-    border-left: darkred solid 3px;
-    background: #400;
-}
-
-.message.warning {
-    border-left: yellow solid 3px;
-    background: darkgoldenrod;
-}
-
-.message.info {
+.message-list li {
+    margin: 10px;
+    padding: 10px;
+    width: 150px;
     border-left: #06f solid 3px;
-    background: darkblue;
+    background: #009;
 }
 
-.message.hidden {
-    /* visibility: hidden; */
-    display: none;
+.message-list li:hover {
+    cursor: pointer;
 }
 
+.message-list li.error {
+    border-left: #f40 solid 3px;
+    background: #802200;
+}
+
+.message-list li.warning {
+    border-left: #fc0 solid 3px;
+    background: #b38f00;
+}
+
+.message-list li.info {
+    border-left: #06f solid 3px;
+    background: #009;
+}
+
+/*
+    NAVBAR
+*/
 .navbar {
     background: #06f;
     color: white;
-    border-bottom: darkblue solid 4px;
+    border-bottom: #009 solid 4px;
     position: fixed;
     width: 100%;
     top: 0px;
@@ -69,17 +76,50 @@ body {
 
 .navbar li:hover {
     cursor: pointer;
-    background: darkblue;
+    background: #009;
     /* text-decoration: underline; */
     /* border-bottom: white 2px solid; */
 }
 
-.content {
-    padding-top: 60px;
-    /* margin-top: 60px; */
-    margin-left: 10px;
+.logo {
+    font-weight: bold;
+    font-size: inherit;
+    font-family: inherit;
+    
+    -moz-user-focus: ignore;
+    display: inline-block;
+    padding: 10px;
+    background: #009;
+    color: #fff;
+    cursor: pointer;
+    
+    border: none;
+    outline: 0;
 }
 
+/*
+    CONTENT
+*/
+.content {
+    width: 760px;
+    padding: 60px 0px 10px 0px;
+    /* margin-top: 60px; */
+    /* margin-left: 10px; */
+    margin: auto;
+    background: #111;
+}
+
+#wosci_canvas {
+    /* center the canvas */
+    display: block;
+    margin: 0 auto;
+    background-color: #111;
+    border: solid 1px #333;
+}
+
+/*
+    SIDEBAR
+*/
 .sidebar {
     background: #06f;
     color: #fff;
@@ -111,11 +151,14 @@ body {
 
 .sidebar li:hover {
     cursor: pointer;
-    background: darkblue;
+    background: #009;
     /* text-decoration: underline; */
     /* border-bottom: white 2px solid; */
 }
 
+/*
+    FOOTER
+*/
 .footer {
     background: #06f;
     color: #fff;
@@ -138,24 +181,17 @@ body {
     text-decoration: underline;
 }
 
+/*
+    OTHER
+*/
 .badge {
     display: inline-block;
     /* background: #AAA; */
     /* color: #333; */
-    min-width: 70px;
+    min-width: 100px;
 }
 
-.logo {
-    font-weight: bold;
-    font-size: inherit;
-    
-    -moz-user-focus: ignore;
-    display: inline-block;
-    padding: 10px;
-    background: darkblue;
-    color: #fff;
-    cursor: pointer;
-    
-    border: none;
-    outline: 0;
+.data {
+    overflow: auto;
+    font-family: 'Courier New', Courier, monospace;
 }

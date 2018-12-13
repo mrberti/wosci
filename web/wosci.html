@@ -1,30 +1,29 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Wosci</title>
+    <title>wOsci - The websocket based oscilloscope</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="wosci.css">
   </head>
 
   <body>
-    <div id="message" class="div-message hidden"></div>
-
     <div id="navbar" class="navbar">
       <header>
-        
-        <ul>
+        <div style="display: inline; margin: auto;">
+          <ul>
             <button id="logo" class="logo">&#9776; wOsci</button>
-          <li>Nav Item</li>
-          <li>Nav Item</li>
-          <li>
-            <input id="edRemoteAddress" type="input" value="192.168.1.40" style="width: 100px;">
-            <input id="btnConnect" type="button" value="Connect">
-            <input id="btnClose" type="button" value="Close connection">
-          </li>
-        </ul>
+            <li>Nav Item</li>
+            <li>Nav Item</li>
+            <li>
+              <input id="edRemoteAddress" type="input" value="192.168.1.40" style="width: 100px;">
+              <input id="edRemotePort" type="number" value="5678" style="width: 50px;">
+              <input id="btnConnect" type="button" value="&#9654; Connect">
+              <input id="btnClose" type="button" value="&#9632; Close">
+            </li>
+          </ul>
+        </div>
       </header>
     </div>
-
     <div id="sidebar" class="sidebar hidden">
       <ul>
         <li>Sidebar Item 1</li>
@@ -35,26 +34,29 @@
 
     <div class="content">
       <div>
+        <ul id="message-list" class="message-list">
+          <!-- <li class="info">Info</li>
+          <li class="warning">Warning</li>
+          <li class="error">Error</li> -->
+        </ul>
         <canvas id="wosci_canvas" width="750px" height="500px"></canvas>
       </div>
       <div>
-          <span class="badge">Y-Min</span><input id="edYMin" type="number" value="0" step="any" style="width: 50px;"><br>
-          <span class="badge">Y-Max</span><input id="edYMax" type="number" value="100" step="any" style="width: 50px;"><br>
-          <input id="cbEnableGrid" type=checkbox value="Enable Grid">Enable Grid<br>
+          <label class="badge" for="edYMin">Y-Min</label><input id="edYMin" type="number" value="0" step="any" style="width: 50px;"><br>
+          <label class="badge" for="edYMax">Y-Max</label><input id="edYMax" type="number" value="100" step="any" style="width: 50px;"><br>
+          <label class="badge" for="cbEnableGrid">Enable Grid</label><input id="cbEnableGrid" type=checkbox value="Enable Grid"><br>
       </div>
       <div>
-        <p id="p1">no data</p>
-        <p id="p2">no data</p>
+        <p id="p1" class="data">no data</p>
+        <p id="p2" class="data">xx</p>
       </div>
     </div>
-
     <div class="footer">
       <footer>
           <a href="https://github.com/mrberti/wosci">wOsci</a>
           <br>Source available on GitHub
       </footer>
     </div>
-  
   <script src="wosci.js"></script>
   </body>
 </html>

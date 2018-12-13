@@ -143,11 +143,19 @@ var Wosci = {
     },
 };
 
+function removeMessage(li) {
+    var ul = document.getElementById("message-list");
+    ul.removeChild(li)
+}
 
 function displayMessage(type, message) {
-    document.getElementById("message").innerHTML = message;
-    document.getElementById("message").className = `message ${type}`;
-    setTimeout(() => document.getElementById("message").className = "message hidden", 3000);
+    var ul = document.getElementById("message-list");
+    var li = document.createElement("li");
+    li.className = type;
+    li.onclick = function() { removeMessage(li); };
+    li.appendChild(document.createTextNode(message));
+    ul.prepend(li);
+    setTimeout(function() {removeMessage(li)}, 5000);
 }
 
 document.getElementById("btnClose").onclick = function(e) {
@@ -157,7 +165,9 @@ document.getElementById("btnClose").onclick = function(e) {
 
 document.getElementById("btnConnect").onclick = function(e) {
     var remoteAddress = document.getElementById("edRemoteAddress").value;
+    var remotePort = document.getElementById("edRemotePort").value;
     Wosci.settings.remoteAddress = remoteAddress;
+    Wosci.settings.remotePort = remotePort;
     Wosci.connectServer();
     displayMessage("info", "Connected");
 }
@@ -171,12 +181,8 @@ document.getElementById("edYMin").onchange = function(e) {
 }
 
 document.getElementById("logo").onclick = function(e) {
-    var cls = document.getElementById("sidebar").className;
-    if (cls == "sidebar hidden")
-        cls = "sidebar";
-    else
-        cls = "sidebar hidden";
-    document.getElementById("sidebar").className = cls;
+    document.getElementById("sidebar").classList.toggle("hidden");
+    displayMessage("warning", "This is an error message",);
 }
 
 /* Start Wosci */
