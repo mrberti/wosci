@@ -34,7 +34,7 @@ client.connect(5025, "192.168.1.80", () => {
 client.on("data", (data) => {
     let temp = parseFloat(data);
     temp = temp;
-    if (temps.length > 1000) {
+    if (temps.length > 10000) {
         temps.shift();
     }
     temps.push(temp);

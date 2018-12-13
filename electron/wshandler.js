@@ -16,7 +16,7 @@ function createHTTPServer() {
     httpServer = new http.createServer( (request, response) => {
         // Nothing to do here.
     })
-    httpServer.listen(5679, () => {});
+    httpServer.listen(5678, () => {});
     console.log(new Date() + " HTTP Server created");
 }
 
@@ -52,4 +52,9 @@ function shutdown() {
     wsServer = null;
     httpServer.close();
     httpServer = null;
+}
+
+// Test module
+if(require.main === module) {
+    createWebsocketServer();
 }
