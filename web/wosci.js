@@ -1,9 +1,147 @@
 "use strict";
 
+/******************************************************************************
+ * WosciWebSocket
+ */
+function WosciWebSocket() {
+    this.webSocket = null;
+    this.dataVectors = {};
+    this.ui = new WosciUI;
+}
+
+WosciWebSocket.prototype.messageHandler = function (event) {
+    try {
+        var packet = JSON.parse(event.data);
+    }
+    catch {
+        console.log("Received packet was not a valid JSON object.");
+        return;
+    }
+    let p = document.getElementById("p1");
+    p.innerHTML = event.data;
+    
+    if (!("packetType" in packet)) {
+        console.log("Got invalid message.");
+        console.log(packet);
+        return;
+    }
+    if (packet["packetType"] == "dataVectors") {
+        let dataVectors = {};
+        dataVectors.vectorCount = parseInt(packet["dataVectorsCount"]);
+        dataVectors.vectors = packet["dataVectors"];
+        this.dataVectors = dataVectors;
+    }
+}
+
+WosciWebSocket.prototype.connect = function(remoteAddress, remotePort) {
+    /* Check if the websocket is already up an running */
+    if (this.webSocket) {
+        if (this.webSocket.readyState == 1) {
+            this.ui.showMessage("Websocket already running.", "warning")
+            return;
+        }
+    }
+    /* Create a new websocket object */
+    let serverString = "ws://"+remoteAddress+":"+remotePort+"/";;
+    this.webSocket = new WebSocket(serverString);
+    this.ui.showMessage("New WebSocket created: " + serverString)
+    console.log("New Websocket created: " + serverString);
+
+    /* Define Websocket callbacks */
+    let self = this;
+    let p = document.getElementById("p1");
+    this.webSocket.onmessage = function(event) {
+        self.messageHandler(event);
+    };
+    this.webSocket.onerror = function(event) {
+        self.ui.showMessage("WebSocket: A wild error appeared", "error");
+        this.WebSocket.close();
+        console.log(event);
+        p.innerHTML = JSON.stringify(event);
+    };
+    this.webSocket.onclose = function (event) {
+        self.ui.showMessage("The WebSocket was closed", "info");
+        console.log("Websocket Closed.");
+        p.innerHTML = "Connection Closed";
+    }
+}
+
+WosciWebSocket.prototype.getDataVectors = function() {
+    return this.dataVectors;
+}
+
+WosciWebSocket.prototype.close = function() {
+    try { 
+        this.webSocket.close();
+    }
+    catch(error) {
+        console.log("Could not close websocket.");
+    }
+}
+
+/******************************************************************************
+ * WosciUI
+ */
+function WosciUI() {
+    this.elBtnConnect = document.getElementById("btnConnect");
+    this.elBtnClose = document.getElementById("btnClose");
+    this.elEdRemoteAddress = document.getElementById("edRemoteAddress");
+    this.elEdRemotePort = document.getElementById("edRemotePort");
+    this.elYLimMin = document.getElementById("edYLimMin");
+    this.elYLimMin = document.getElementById("edYLimMin");
+    this.elMessageList = document.getElementById("message-list");
+    this.elLogo = document.getElementById("logo");
+    this.elSidebar = document.getElementById("sidebar");
+
+    /* Assign callbacks on button clicks */
+    var self = this;
+    this.elLogo.onclick = function() {
+        self.elSidebar.classList.toggle("hidden");
+    }
+
+    this.elBtnClose.onclick = function() {
+        Wosci.wosciWebsocket.close();
+    }
+
+    this.elBtnConnect.onclick = function() {
+        var remoteAddress = self.elEdRemoteAddress.value;
+        var remotePort = self.elEdRemotePort.value;
+        Wosci.settings.remoteAddress = remoteAddress;
+        Wosci.settings.remotePort = remotePort;
+        Wosci.wosciWebsocket.connect(remoteAddress, remotePort);
+    }
+}
+
+WosciUI.prototype.getYLimits = function() {
+    return [0, 100];
+}
+
+WosciUI.prototype.removeMessage = function (elMessage) {
+    this.elMessageList.removeChild(elMessage);
+}
+
+WosciUI.prototype.showMessage = function(message, type = "info") {
+    var elNewMessage = document.createElement("li");
+    let self = this;
+    elNewMessage.className = type;
+    var timeout = setTimeout(function() { self.removeMessage(elNewMessage); }, 5000);
+    elNewMessage.onclick = function() {
+        clearTimeout(timeout);
+        self.removeMessage(elNewMessage);
+    };
+    elNewMessage.appendChild(document.createTextNode(message));
+    this.elMessageList.append(elNewMessage);
+}
+
+/******************************************************************************
+ * 
+ */
 var Wosci = {
     settings: {
         canvasID: "wosci_canvas",
         SVGPlotterID: "svg-plotter",
+        yLimMinID: "edYMin",
+        yLimMaxID: "edYMax",
 
         /* Style settings */
         backgroundColor: "#111",
@@ -22,81 +160,25 @@ var Wosci = {
             "#00cc00",
             "#ff8000",
         ],
-
-        /* Server settings */
-        remoteAddress: "192.168.1.40",
-        remotePort: 5679,
-        serverString: function() {
-            return "ws://"+this.remoteAddress+":"+this.remotePort+"/";
-        }
     },
 
     init: function() {
+        /* Create Wosci Websocket */
+        this.wosciWebsocket = new WosciWebSocket();
+
+        /* Plot settings*/
+        this.elYLimMin = document.getElementById(this.settings.yLimMinID)
+        this.elYLimMax = document.getElementById(this.settings.yLimMaxID)
+
+        /* canvas */
         this.cvs = document.getElementById(this.settings.canvasID);
         this.ctx = Wosci.cvs.getContext("2d");
-        /* Plot settings*/
-        this.elYLimMin = document.getElementById("edYMin")
-        this.elYLimMax = document.getElementById("edYMax")
 
         /* SVG */
         this.elSVGPlotter = document.getElementById(this.settings.SVGPlotterID);
 
         /* Initialize data*/
         this.data = {};
-        this.draw();
-
-        // requestAnimationFrame(()=>this.draw);
-    },
-
-    messageHandler: function(event) {
-        let p = document.getElementById("p1");
-        p.innerHTML = event.data;
-        let packet = JSON.parse(event.data);
-
-        let message_type = packet["message_type"];
-        if(message_type == "data_vectors") {
-            let data = {};
-            data.vectorCount =  parseInt(packet["data_vectors_count"]);
-            data.vectors = packet["data_vectors"];
-            this.data = data;
-            // this.draw();
-        }
-    },
-
-    connectWebsocket: function() {
-        /* Check if the websocket is already up an running */
-        if(this.websocket) {
-            if(this.websocket.readyState == 1) {
-                console.log("Websocket already running.");
-                return;
-            }
-        }
-        /* Create a new websocket object and define callbacks */
-        let serverString = this.settings.serverString();
-        this.websocket = new WebSocket(serverString);
-        console.log("New Websocket created to " + serverString);
-        let self = this;
-        let p = document.getElementById("p1");
-        this.websocket.onmessage = function(e) {
-            self.messageHandler(e);
-        };
-        this.websocket.onerror = function(e) {
-            p.innerHTML = JSON.stringify(e);
-        };
-        this.websocket.onclose = function (e) {
-            console.log("Websocket Closed.");
-            p.innerHTML = "Connection Closed";
-        }
-    },
-
-    close: function() {
-        try { 
-            this.websocket.close();
-        }
-        catch(error) {
-            console.log("Could not close websocket.");
-            return;
-        }
     },
 
     drawGrid: function() {
@@ -196,6 +278,7 @@ var Wosci = {
     },
 
     draw: function() {
+        this.data = this.wosciWebsocket.getDataVectors();
         // this.ctx.clearRect(0, 0, this.N_x, this.N_y);
         // this.drawGrid();
         // this.drawAxes();
@@ -205,48 +288,6 @@ var Wosci = {
     },
 };
 
-function removeMessage(li) {
-    var ul = document.getElementById("message-list");
-    ul.removeChild(li)
-}
-
-function displayMessage(type, message) {
-    var ul = document.getElementById("message-list");
-    var li = document.createElement("li");
-    li.className = type;
-    li.onclick = function() { removeMessage(li); };
-    li.appendChild(document.createTextNode(message));
-    ul.prepend(li);
-    setTimeout(function() {removeMessage(li)}, 5000);
-}
-
-document.getElementById("btnClose").onclick = function(e) {
-    Wosci.close();
-    displayMessage("warning", "Connection closed");
-}
-
-document.getElementById("btnConnect").onclick = function(e) {
-    var remoteAddress = document.getElementById("edRemoteAddress").value;
-    var remotePort = document.getElementById("edRemotePort").value;
-    Wosci.settings.remoteAddress = remoteAddress;
-    Wosci.settings.remotePort = remotePort;
-    Wosci.connectWebsocket();
-    displayMessage("info", "Connected");
-}
-
-// document.getElementById("edYMax").onchange = function(e) {
-//     Wosci.yLimMax = parseFloat(document.getElementById("edYMax").value);
-// }
-
-// document.getElementById("edYMin").onchange = function(e) {
-//     Wosci.yLimMin = parseFloat(document.getElementById("edYMin").value);
-// }
-
-document.getElementById("logo").onclick = function(e) {
-    document.getElementById("sidebar").classList.toggle("hidden");
-    displayMessage("warning", "This is an error message",);
-}
-
 /* Start Wosci */
 Wosci.init();
-console.log(Wosci);
+Wosci.draw();
