@@ -8,7 +8,7 @@ const net = require("net");
 let client = new net.Socket();
 let temps = [];
 
-let data_vectors = {
+let dataVectors = {
     "label": "label",
     "unit": "unit",
     "length": 0,
@@ -16,9 +16,9 @@ let data_vectors = {
 }
 
 let packet = {
-    "message_type": "data_vectors",
-    "data_vectors_count": 1,
-    "data_vectors": [data_vectors]
+    "packetType": "dataVectors",
+    "dataVectorsCount": 1,
+    "dataVectors": [dataVectors]
 }
 
 function getPacket() {
@@ -34,11 +34,11 @@ client.connect(5025, "192.168.1.80", () => {
 client.on("data", (data) => {
     let temp = parseFloat(data);
     temp = temp;
-    if (temps.length > 10000) {
+    if (temps.length > 1000) {
         temps.shift();
     }
     temps.push(temp);
-    packet.data_vectors[0].length = temps.length;
+    packet.dataVectors[0].length = temps.length;
     // console.log(packet);
 })
 

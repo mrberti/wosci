@@ -34,16 +34,23 @@ function messageHandler(request) {
     var connection = request.accept(null, request.origin);
     console.log(new Date() + " Got new connection: " + request.origin);
 
-    connection.sendUTF("Welcome to Wosci node.js server.");
+    let welcomeMessage = {
+        packetType: "message",
+        message: "Welcome to Wosci node.js server."
+    }
+
+    connection.sendUTF(JSON.stringify(welcomeMessage));
 
     connection.on("message", (message) => {
         console.log(new Date() + " Received message: "+ message);
     })
 
-    setInterval(() => {
-        let data = scpi.getPacket();
-        connection.sendUTF(JSON.stringify(data));
-    }, 100);
+    setTimeout(() => {
+        setInterval(() => {
+            let data = scpi.getPacket();
+            connection.sendUTF(JSON.stringify(data));
+        }, 100);
+    }, 1000);
 }
 
 function shutdown() {
