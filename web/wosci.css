@@ -101,10 +101,11 @@ body {
     CONTENT
 */
 .content {
-    width: 760px;
+    /* width: 800px; */
+    min-width: 480px;
+    max-width: 1000px;
     padding: 60px 0px 10px 0px;
     /* margin-top: 60px; */
-    /* margin-left: 10px; */
     margin: auto;
     background: #111;
 }
@@ -194,4 +195,23 @@ body {
 .data {
     overflow: auto;
     font-family: 'Courier New', Courier, monospace;
+}
+
+/*
+    SVG PLOTTER
+*/
+#svg-plotter {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    display: block;
+    margin: 10px auto;
+    border: #333 solid 1px;
+}
+
+#svg-plotter path {
+    cursor: pointer;
+    stroke: #06f;
+    stroke-width: 1;
+    fill: none;
 }

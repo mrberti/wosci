@@ -35,11 +35,33 @@
     <div class="content">
       <div>
         <ul id="message-list" class="message-list">
-          <!-- <li class="info">Info</li>
+          <li class="info">Info</li>
           <li class="warning">Warning</li>
-          <li class="error">Error</li> -->
+          <li class="error">Error</li>
         </ul>
-        <canvas id="wosci_canvas" width="750px" height="500px"></canvas>
+        <canvas id="wosci_canvas" width="750px" height="500px" style="display:none"></canvas>
+      </div>
+      <div>
+        <svg id="svg-plotter" width="100%" height="100%" viewBox="0 0 1000 500">
+          <g id="svg-plotter-grid" class="grid">
+            <line></line>
+          </g>
+          <g id="svg-plotter-scale">
+            <text x="0" y="0">test</text>
+          </g>
+          <g>
+            <path id="svg-path-1" d=""></path>
+            <path id="svg-path-2" d=""></path>
+            <path id="svg-path-3" d=""></path>
+            <path id="svg-path-4" d=""></path>
+            <path id="svg-path-5" d=""></path>
+            <path id="svg-path-6" d=""></path>
+            <path id="svg-path-7" d=""></path>
+            <path id="svg-path-8" d=""></path>
+            <path id="svg-path-9" d=""></path>
+            <path id="svg-path-10" d=""></path>
+          </g>
+        </svg>
       </div>
       <div>
           <label class="badge" for="edYMin">Y-Min</label><input id="edYMin" type="number" value="0" step="any" style="width: 50px;"><br>

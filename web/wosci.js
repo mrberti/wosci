@@ -1,15 +1,28 @@
+"use strict";
+
 var Wosci = {
     settings: {
-        canvasId: "wosci_canvas",
-        /* Plot settings*/
-        yLimMin: 0,
-        yLimMax: 100,
+        canvasID: "wosci_canvas",
+        SVGPlotterID: "svg-plotter",
+
         /* Style settings */
         backgroundColor: "#111",
         borderColor: "#333",
         gridColor: "#444",
         gridLineDash: [2, 3],
-        dataLineColor: ["#0066ff","#ff4400","#ffcc00","#009900","#cc00ff","#00b8e6","#e6005c","#d9d9d9", "#00cc00", "#ff8000"],
+        dataLineColor: [
+            "#0066ff",
+            "#ff4400",
+            "#ffcc00",
+            "#009900",
+            "#cc00ff",
+            "#00b8e6",
+            "#e6005c",
+            "#d9d9d9",
+            "#00cc00",
+            "#ff8000",
+        ],
+
         /* Server settings */
         remoteAddress: "192.168.1.40",
         remotePort: 5679,
@@ -19,27 +32,38 @@ var Wosci = {
     },
 
     init: function() {
-        this.cvs = document.getElementById(this.settings.canvasId);
+        this.cvs = document.getElementById(this.settings.canvasID);
         this.ctx = Wosci.cvs.getContext("2d");
-        this.N_x = this.cvs.width;
-        this.N_y = this.cvs.height;
+        /* Plot settings*/
+        this.elYLimMin = document.getElementById("edYMin")
+        this.elYLimMax = document.getElementById("edYMax")
+
+        /* SVG */
+        this.elSVGPlotter = document.getElementById(this.settings.SVGPlotterID);
+
+        /* Initialize data*/
+        this.data = {};
+        this.draw();
+
+        // requestAnimationFrame(()=>this.draw);
     },
 
     messageHandler: function(event) {
-        p = document.getElementById("p1");
+        let p = document.getElementById("p1");
         p.innerHTML = event.data;
-        packet = JSON.parse(event.data);
+        let packet = JSON.parse(event.data);
 
-        message_type = packet["message_type"];
+        let message_type = packet["message_type"];
         if(message_type == "data_vectors") {
-            data = {};
+            let data = {};
             data.vectorCount =  parseInt(packet["data_vectors_count"]);
             data.vectors = packet["data_vectors"];
-            this.draw(data);
+            this.data = data;
+            // this.draw();
         }
     },
 
-    connectServer: function() {
+    connectWebsocket: function() {
         /* Check if the websocket is already up an running */
         if(this.websocket) {
             if(this.websocket.readyState == 1) {
@@ -48,11 +72,11 @@ var Wosci = {
             }
         }
         /* Create a new websocket object and define callbacks */
-        serverString = this.settings.serverString();
+        let serverString = this.settings.serverString();
         this.websocket = new WebSocket(serverString);
         console.log("New Websocket created to " + serverString);
-        var self = this;
-        p = document.getElementById("p1");
+        let self = this;
+        let p = document.getElementById("p1");
         this.websocket.onmessage = function(e) {
             self.messageHandler(e);
         };
@@ -76,9 +100,9 @@ var Wosci = {
     },
 
     drawGrid: function() {
-        N_x = this.N_x;
-        N_y = this.N_y;
-        ctx = this.ctx;
+        let N_x = this.cvs.width;
+        let N_y = this.cvs.height;
+        let ctx = this.ctx;
 
         ctx.beginPath();
         ctx.strokeStyle = this.settings.gridColor;
@@ -99,8 +123,8 @@ var Wosci = {
         var ctx = this.ctx;
         N_x = this.N_x;
         N_y = this.N_y;
-        yLimMax = this.settings.yLimMax;
-        yLimMin = this.settings.yLimMin
+        yLimMax = this.yLimMax;
+        yLimMin = this.yLimMin
         yLimHalf = (yLimMax-yLimMin)/2 + this.settings.yLimMin;
         ctx.font="12px Arial";
         ctx.fillStyle = this.settings.gridColor;
@@ -114,8 +138,8 @@ var Wosci = {
         var delta_x;
         var N_x = this.N_x;
         var N_y = this.N_y;
-        var yLimMax = this.settings.yLimMax;
-        var yLimMin = this.settings.yLimMin;
+        let yLimMin = parseFloat(this.elYLimMin.value);
+        let yLimMax = parseFloat(this.elYLimMax.value);
         var yLimDelta = yLimMax - yLimMin;
 
         for(var i_vec = 0; i_vec < vectorCount; i_vec++) {
@@ -133,13 +157,51 @@ var Wosci = {
         }
     },
 
-    draw: function(data) {
-        var N_x = this.N_x;
-        var N_y = this.N_y;
-        this.ctx.clearRect(0, 0, N_x, N_y);
-        this.drawGrid();
-        this.drawAxes();
-        this.drawDataVectors(data.vectorCount, data.vectors);
+    drawDataVectorsSVG: function() {
+        if (!("vectorCount" in this.data && "vectors" in this.data)) {
+            return;
+        }
+        let vectorCount = this.data.vectorCount;
+        let vectors = this.data.vectors;
+
+        let elSVG = document.getElementById("svg-plotter");
+        let viewBox = elSVG.getAttribute("viewBox")
+                           .split(" ")
+                           .map(x => parseFloat(x));
+        let N_x = viewBox[2] - viewBox[0];
+        let N_y = viewBox[3] - viewBox[1];
+        // let N_x = 750;
+        // let N_y = 500;
+        let yLimMin = parseFloat(this.elYLimMin.value);
+        let yLimMax = parseFloat(this.elYLimMax.value);
+        let yLimDelta = yLimMax - yLimMin;
+
+        for(let i_vec = 0; i_vec < vectorCount; i_vec++) {
+            let length = vectors[i_vec].length;
+            let values = vectors[i_vec].values;
+            let delta_x = N_x / (length-1);
+            let points = []
+            for(let i = 0; i < length; i++) {
+                let y = Math.round(( N_y - (values[i]-yLimMin) / yLimDelta * N_y));
+                let x = Math.round(i*delta_x)
+                // let y = ((yLimDelta / values[i] * N_y - yLimMin));
+                // let x = (i*delta_x)
+                points.push([x, y]);
+            }
+            let path = "M" + points.map(p => p[0]+","+p[1]).join(" L");
+            let elPath = document.getElementById(`svg-path-${i_vec+1}`)
+            elPath.setAttribute("d", path)
+            elPath.setAttribute("style", "stroke: "+this.settings.dataLineColor[i_vec]+";");
+        }
+    },
+
+    draw: function() {
+        // this.ctx.clearRect(0, 0, this.N_x, this.N_y);
+        // this.drawGrid();
+        // this.drawAxes();
+        // this.drawDataVectors(data.vectorCount, data.vectors);
+        this.drawDataVectorsSVG();
+        window.requestAnimationFrame(this.draw.bind(this));
     },
 };
 
@@ -168,17 +230,17 @@ document.getElementById("btnConnect").onclick = function(e) {
     var remotePort = document.getElementById("edRemotePort").value;
     Wosci.settings.remoteAddress = remoteAddress;
     Wosci.settings.remotePort = remotePort;
-    Wosci.connectServer();
+    Wosci.connectWebsocket();
     displayMessage("info", "Connected");
 }
 
-document.getElementById("edYMax").onchange = function(e) {
-    Wosci.settings.yLimMax = parseFloat(document.getElementById("edYMax").value);
-}
+// document.getElementById("edYMax").onchange = function(e) {
+//     Wosci.yLimMax = parseFloat(document.getElementById("edYMax").value);
+// }
 
-document.getElementById("edYMin").onchange = function(e) {
-    Wosci.settings.yLimMin = parseFloat(document.getElementById("edYMin").value);
-}
+// document.getElementById("edYMin").onchange = function(e) {
+//     Wosci.yLimMin = parseFloat(document.getElementById("edYMin").value);
+// }
 
 document.getElementById("logo").onclick = function(e) {
     document.getElementById("sidebar").classList.toggle("hidden");
@@ -187,3 +249,4 @@ document.getElementById("logo").onclick = function(e) {
 
 /* Start Wosci */
 Wosci.init();
+console.log(Wosci);
