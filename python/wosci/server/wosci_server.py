@@ -40,7 +40,7 @@ class WosciServer():
         # Create welcome message and send to client
         logging.info("Running wosci server")
         packet = dict()
-        packet["message_type"] = "message"
+        packet["packetType"] = "message"
         packet["message"] = "Welcome to the Autobahn server."
         self.sendPacket(packet)
         await asyncio.sleep(.1)
@@ -49,10 +49,10 @@ class WosciServer():
             try:
                 # Create sample data and send to client
                 packet = dict()
-                packet["message_type"] = "data_vectors"
-                packet["data_vectors_count"] = 10
+                packet["packetType"] = "dataVectors"
+                packet["dataVectorsCount"] = 10
                 data_vectors = []
-                for i in range(0,packet["data_vectors_count"]):
+                for i in range(0,packet["dataVectorsCount"]):
                     np_data = np.random.randint(low=100*i, high=100*(i+1), 
                         size=101)
                     data = np_data.tolist()
@@ -62,7 +62,7 @@ class WosciServer():
                     l["length"] = len(data)
                     l["values"] = data
                     data_vectors.append(l)
-                packet["data_vectors"] = data_vectors
+                packet["dataVectors"] = data_vectors
                 await asyncio.sleep(.05)
                 self.sendPacket(packet)
             except Exception as e:
