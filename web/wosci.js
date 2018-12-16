@@ -104,7 +104,7 @@ WosciWebSocket.prototype.messageHandler = function (event) {
     try {
         var packet = JSON.parse(event.data);
     }
-    catch {
+    catch (error) {
         console.log("Received packet was not a valid JSON object.");
         return;
     }
@@ -169,7 +169,7 @@ WosciWebSocket.prototype.close = function() {
     try { 
         this.webSocket.close();
     }
-    catch(error) {
+    catch (error) {
         console.log("Could not close websocket.");
     }
 }
