@@ -58,10 +58,21 @@ function WosciUI() {
         Wosci.settings.remotePort = remotePort;
         Wosci.websocket.connect(remoteAddress, remotePort);
     }
+
+    let els = document.querySelectorAll(".scale-y-click");
+    els.forEach(el => {
+        el.onclick = function() {
+            el.parentElement.classList.toggle("hidden");
+        }
+    });
 }
 
 WosciUI.prototype.getYLimits = function() {
     return [this.elYLimMin.value, this.elYLimMax.value];
+}
+
+WosciUI.prototype.getPlotterBBox = function() {
+    return this.elSVGPlotter.getBoundingClientRect();
 }
 
 WosciUI.prototype.removeMessage = function (elMessage) {
@@ -105,6 +116,11 @@ WosciWebSocket.prototype.messageHandler = function (event) {
         console.log(packet);
         return;
     }
+    if (packet["packetType"] == "message") {
+        let message = packet["message"];
+        Wosci.ui.showMessage(message)
+    }
+    
     if (packet["packetType"] == "dataVectors") {
         let dataVectors = {};
         dataVectors.vectorCount = parseInt(packet["dataVectorsCount"]);
@@ -124,7 +140,6 @@ WosciWebSocket.prototype.connect = function(remoteAddress, remotePort) {
     /* Create a new websocket object */
     let serverString = "ws://"+remoteAddress+":"+remotePort+"/";;
     this.webSocket = new WebSocket(serverString);
-    Wosci.ui.showMessage("New WebSocket created: " + serverString)
     console.log("New Websocket created: " + serverString);
 
     /* Define Websocket callbacks */
@@ -182,14 +197,14 @@ WosciSVGPlotter.prototype.drawDataVectorsSVG = function() {
     let vectorCount = this.data.vectorCount;
     let vectors = this.data.vectors;
 
-    let viewBox = Wosci.ui.elSVGPlotter.getAttribute("viewBox")
-                       .split(" ")
-                       .map(x => parseFloat(x));
-    let pixelsX = viewBox[2] - viewBox[0];
-    let pixelsY = viewBox[3] - viewBox[1];
+    let pixelsX = Wosci.ui.getPlotterBBox().width;
+    let pixelsY = Wosci.ui.getPlotterBBox().height;
     let yLimMin = Wosci.ui.getYLimits()[0];
     let yLimMax = Wosci.ui.getYLimits()[1];
     let yLimDelta = yLimMax - yLimMin;
+
+    // console.log(yLimMin + " " + yLimMax + " " + yLimDelta);
+    console.log(pixelsX + " " + pixelsY);
 
     for(let vectorIndex = 0; vectorIndex < vectorCount; vectorIndex++) {
         let length = vectors[vectorIndex].length;
@@ -205,7 +220,7 @@ WosciSVGPlotter.prototype.drawDataVectorsSVG = function() {
         /* TODO: generalize path handling */
         let elPath = document.getElementById(`svg-path-${vectorIndex+1}`)
         elPath.setAttribute("d", path)
-        elPath.setAttribute("style", "stroke: "+Wosci.settings.dataLineColor[vectorIndex]+";");
+        // elPath.setAttribute("style", "stroke: "+Wosci.settings.dataLineColor[vectorIndex]+";");
     }
 }
 
@@ -260,3 +275,4 @@ var Wosci = {
 
 /* Start Wosci */
 Wosci.init();
+console.log(Wosci.ui.elSVGPlotter.getBBox().width)

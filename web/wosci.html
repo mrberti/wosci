@@ -19,11 +19,13 @@
               <input id="edRemotePort" type="number" value="5678" style="width: 50px;">
               <input id="btnConnect" type="button" value="&#9654; Connect">
               <input id="btnClose" type="button" value="&#9632; Close">
+              <input type="number" value="1" min="1" max="10">
             </li>
           </ul>
         </div>
       </header>
     </div>
+
     <div id="sidebar" class="sidebar hidden">
       <ul>
         <li>Sidebar Item 1</li>
@@ -33,46 +35,121 @@
     </div>
 
     <div class="content">
-      <div>
-        <ul id="message-list" class="message-list">
-          <!-- <li class="info">Info</li>
-          <li class="warning">Warning</li>
-          <li class="error">Error</li> -->
+      <ul id="message-list" class="message-list">
+        <!-- <li class="info">Info</li> -->
+        <!-- <li class="warning">Warning</li> -->
+        <!-- <li class="error">Error</li> -->
+      </ul>
+
+      <canvas id="wosci_canvas" width="750px" height="500px" style="display:none">
+      </canvas>
+
+      <div class="plotter-container">
+        <ul class="plotter-col-container">
+
+          <li class="ch1">
+            <div class="scale-y-col ch1">
+              <svg class="svg-scale scale-y scale-y-click">
+                <line x1="100%" y1="0%" x2="100%" y2="100%"/>
+                <!-- dashes -->
+                <line y1="00%" x1="50%" y2="00%" x2="100%"/>
+                <line y1="10%" x1="50%" y2="10%" x2="100%"></line>
+                <line y1="20%" x1="50%" y2="20%" x2="100%"></line>
+                <line y1="30%" x1="50%" y2="30%" x2="100%"></line>
+                <line y1="40%" x1="50%" y2="40%" x2="100%"></line>
+                <line y1="50%" x1="50%" y2="50%" x2="100%"></line>
+                <line y1="60%" x1="50%" y2="60%" x2="100%"></line>
+                <line y1="70%" x1="50%" y2="70%" x2="100%"></line>
+                <line y1="80%" x1="50%" y2="80%" x2="100%"></line>
+                <line y1="90%" x1="50%" y2="90%" x2="100%"></line>
+              </svg>
+              <svg class="svg-scale scale-y" width=100% height=100%>
+                <text x="40" y="10%">90%</text>
+              </svg>
+              <input id="edYLimMax" type="number" value="1000" class="scale-y-input-top"></input>
+              <input id="edYLimMin" type="number" value="0" class="scale-y-input-bot"></input>
+            </div>
+          </li>
+
+          <li class="ch2">
+              <div class="scale-y-col">
+                <svg class="svg-scale scale-y scale-y-click" width=5px height=100%>
+                  <line x1="100%" y1="0%" x2="100%" y2="100%"/>
+                  <!-- dashes -->
+                  <line y1="00%" x1="0%" y2="00%" x2="100%"/>
+                  <line y1="10%" x1="0%" y2="10%" x2="100%"></line>
+                  <line y1="20%" x1="0%" y2="20%" x2="100%"></line>
+                  <line y1="30%" x1="0%" y2="30%" x2="100%"></line>
+                  <line y1="40%" x1="0%" y2="40%" x2="100%"></line>
+                  <line y1="50%" x1="0%" y2="50%" x2="100%"></line>
+                  <line y1="60%" x1="0%" y2="60%" x2="100%"></line>
+                  <line y1="70%" x1="0%" y2="70%" x2="100%"></line>
+                  <line y1="80%" x1="0%" y2="80%" x2="100%"></line>
+                  <line y1="90%" x1="0%" y2="90%" x2="100%"></line>
+                </svg>
+                <svg class="svg-scale scale-y" width=100% height=100%>
+                  <text x="40" y="10%">90%</text>
+                </svg>
+                <input id="edYLimMax" type="number" value="1000" class="scale-y-input-top"></input>
+                <input id="edYLimMin" type="number" value="0" class="scale-y-input-bot"></input>
+              </div>
+            </li>
+
+          <li id="plotter-main" style="position: relative; right:0; width: 100%;">
+            <svg id="svg-plotter" class="svg-plotter" width="100%" height="100%" viewox="0 0 1000 1000" style="margin:0;">
+              <g id="svg-plotter-grid" class="svg-plotter-grid">
+                <!-- vertical lines -->
+                <line x1="10%" y1="0%" x2="10%" y2="100%"></line>
+                <line x1="20%" y1="0%" x2="20%" y2="100%"></line>
+                <line x1="30%" y1="0%" x2="30%" y2="100%"></line>
+                <line x1="40%" y1="0%" x2="40%" y2="100%"></line>
+                <line x1="50%" y1="0%" x2="50%" y2="100%"></line>
+                <line x1="60%" y1="0%" x2="60%" y2="100%"></line>
+                <line x1="70%" y1="0%" x2="70%" y2="100%"></line>
+                <line x1="80%" y1="0%" x2="80%" y2="100%"></line>
+                <line x1="90%" y1="0%" x2="90%" y2="100%"></line>
+                <!-- horizontal lines -->
+                <line y1="10%" x1="0%" y2="10%" x2="100%"></line>
+                <line y1="20%" x1="0%" y2="20%" x2="100%"></line>
+                <line y1="30%" x1="0%" y2="30%" x2="100%"></line>
+                <line y1="40%" x1="0%" y2="40%" x2="100%"></line>
+                <line y1="50%" x1="0%" y2="50%" x2="100%"></line>
+                <line y1="60%" x1="0%" y2="60%" x2="100%"></line>
+                <line y1="70%" x1="0%" y2="70%" x2="100%"></line>
+                <line y1="80%" x1="0%" y2="80%" x2="100%"></line>
+                <line y1="90%" x1="0%" y2="90%" x2="100%"></line>
+              </g>
+              <g id="svg-plotter-traces">
+                <path id="svg-path-1" class="ch1" d="M0,0 L100,100"></path>
+                <path id="svg-path-2" class="ch2" d="M10,0 L100,100"></path>
+                <path id="svg-path-3" d=""></path>
+                <path id="svg-path-4" d=""></path>
+                <path id="svg-path-5" d=""></path>
+                <path id="svg-path-6" d=""></path>
+                <path id="svg-path-7" d=""></path>
+                <path id="svg-path-8" d=""></path>
+                <path id="svg-path-9" d=""></path>
+                <path id="svg-path-10" d=""></path>
+              </g>
+            </svg>
+            <div class="scale-x">
+                X-Scale
+            </div>
+          </li>
         </ul>
-        <canvas id="wosci_canvas" width="750px" height="500px" style="display:none"></canvas>
       </div>
-      <div>
-        <svg id="svg-plotter" width="100%" height="100%" viewBox="0 0 1000 500">
-          <g id="svg-plotter-grid" class="grid">
-            <line></line>
-          </g>
-          <g id="svg-plotter-scale">
-            <text x="0" y="0">test</text>
-          </g>
-          <g>
-            <path id="svg-path-1" d=""></path>
-            <path id="svg-path-2" d=""></path>
-            <path id="svg-path-3" d=""></path>
-            <path id="svg-path-4" d=""></path>
-            <path id="svg-path-5" d=""></path>
-            <path id="svg-path-6" d=""></path>
-            <path id="svg-path-7" d=""></path>
-            <path id="svg-path-8" d=""></path>
-            <path id="svg-path-9" d=""></path>
-            <path id="svg-path-10" d=""></path>
-          </g>
-        </svg>
-      </div>
-      <div>
-          <label class="badge" for="edYLimMin">Y-Min</label><input id="edYLimMin" type="number" value="0" step="any" style="width: 50px;"><br>
-          <label class="badge" for="edYLimMax">Y-Max</label><input id="edYLimMax" type="number" value="100" step="any" style="width: 50px;"><br>
+
+      <div class="ui">
+          <label class="badge" for="edYLimMin">Y-Min</label><input id="edYLimMin2" type="number" value="0" step="any" style="width: 50px;"><br>
+          <label class="badge" for="edYLimMax">Y-Max</label><input id="edYLimMax2" type="number" value="100" step="any" style="width: 50px;"><br>
           <label class="badge" for="cbEnableGrid">Enable Grid</label><input id="cbEnableGrid" type=checkbox value="Enable Grid"><br>
       </div>
-      <div>
+      <div class="data">
         <p id="p1" class="data">no data</p>
         <p id="p2" class="data">xx</p>
       </div>
     </div>
+
     <div class="footer">
       <footer>
           <a href="https://github.com/mrberti/wosci">wOsci</a>
