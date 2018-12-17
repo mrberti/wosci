@@ -41,30 +41,75 @@ function WosciUI() {
     this.canvas = document.getElementById("wosci_canvas");
     this.context = this.canvas.getContext("2d");
 
-    /* Assign callbacks on button clicks */
-    var self = this;
-    this.elLogo.onclick = function() {
-        self.elSidebar.classList.toggle("hidden");
-    }
+    /* Axes control */
+    this.elNumAxes = document.getElementById("edNumAxes");
 
+    /* svg plotter traces */
+    this.elSVGTraces = document.getElementById("svg-plotter-traces")
+    this.elSVGPaths = this.elSVGTraces.querySelectorAll("path");
+
+    /* When logo clicked => toggle sidebar */
+    this.elLogo.onclick = function() {
+        this.elSidebar.classList.toggle("hidden");
+    }.bind(this);
+
+    /* When closed clicked => close websocket */
     this.elBtnClose.onclick = function() {
         Wosci.websocket.close();
-    }
+    };
 
+    /* When connect clicked => open websocket */
     this.elBtnConnect.onclick = function() {
-        var remoteAddress = self.elEdRemoteAddress.value;
-        var remotePort = self.elEdRemotePort.value;
+        var remoteAddress = this.elEdRemoteAddress.value;
+        var remotePort = this.elEdRemotePort.value;
         Wosci.settings.remoteAddress = remoteAddress;
         Wosci.settings.remotePort = remotePort;
         Wosci.websocket.connect(remoteAddress, remotePort);
-    }
+    }.bind(this);
 
+    /* When Scale Y clicked => hide*/
     let els = document.querySelectorAll(".scale-y-click");
     els.forEach(el => {
         el.onclick = function() {
             el.parentElement.classList.toggle("hidden");
         }
     });
+
+    /* Number of axes has been changed => add or remove axes */
+    this.numAxes = 1;
+    this.elNumAxes.value = this.numAxes;
+    this.elNumAxes.onchange = function() {
+        let newNumAxes = this.elNumAxes.value;
+        while (this.numAxes != newNumAxes) {
+            if (newNumAxes > this.numAxes) {
+                this.numAxes++;
+                this.addAxis(this.numAxes);
+            }
+            else if (newNumAxes < this.numAxes) {
+                this.removeAxis(this.numAxes);
+                this.numAxes--;
+            }
+        }
+    }.bind(this);
+}
+
+WosciUI.prototype.addAxis = function(channel) {
+    var svgNS = "http://www.w3.org/2000/svg";
+    let elNewPath = document.createElementNS(svgNS, "path");
+    let className = "ch" + channel;
+    elNewPath.setAttributeNS(null, "class", className);
+    this.elSVGPaths[0].parentElement.appendChild(elNewPath);
+    this.elSVGPaths = this.elSVGTraces.querySelectorAll("path")
+}
+
+WosciUI.prototype.removeAxis = function (channel) {
+    this.elSVGPaths.forEach(el => {
+        let channelNumber = el.getAttributeNS(null, "class").match(/\d+/);
+        if (channelNumber == channel) {
+            this.elSVGTraces.removeChild(el);
+        }
+    });
+    this.elSVGPaths = this.elSVGTraces.querySelectorAll("path")
 }
 
 WosciUI.prototype.getYLimits = function() {
@@ -81,13 +126,14 @@ WosciUI.prototype.removeMessage = function (elMessage) {
 
 WosciUI.prototype.showMessage = function(message, type = "info") {
     var elNewMessage = document.createElement("li");
-    let self = this;
     elNewMessage.className = type;
-    var timeout = setTimeout(function() { self.removeMessage(elNewMessage); }, 5000);
+    var timeout = setTimeout(function() { 
+        this.removeMessage(elNewMessage); 
+    }.bind(this), 5000);
     elNewMessage.onclick = function() {
         clearTimeout(timeout);
-        self.removeMessage(elNewMessage);
-    };
+        this.removeMessage(elNewMessage);
+    }.bind(this);
     elNewMessage.appendChild(document.createTextNode(message));
     this.elMessageList.append(elNewMessage);
 }
@@ -143,17 +189,16 @@ WosciWebSocket.prototype.connect = function(remoteAddress, remotePort) {
     console.log("New Websocket created: " + serverString);
 
     /* Define Websocket callbacks */
-    let self = this;
     let p = document.getElementById("p1");
     this.webSocket.onmessage = function(event) {
-        self.messageHandler(event);
-    };
+        this.messageHandler(event);
+    }.bind(this);
     this.webSocket.onerror = function(event) {
         Wosci.ui.showMessage("WebSocket: A wild error appeared", "error");
         this.WebSocket.close();
         console.log(event);
         p.innerHTML = JSON.stringify(event);
-    };
+    }.bind(this);
     this.webSocket.onclose = function (event) {
         Wosci.ui.showMessage("The WebSocket was closed", "info");
         console.log("Websocket Closed.");
@@ -203,10 +248,10 @@ WosciSVGPlotter.prototype.drawDataVectorsSVG = function() {
     let yLimMax = Wosci.ui.getYLimits()[1];
     let yLimDelta = yLimMax - yLimMin;
 
-    // console.log(yLimMin + " " + yLimMax + " " + yLimDelta);
-    console.log(pixelsX + " " + pixelsY);
-
     for(let vectorIndex = 0; vectorIndex < vectorCount; vectorIndex++) {
+        if (vectorIndex >= Wosci.ui.numAxes) {
+            break;
+        }
         let length = vectors[vectorIndex].length;
         let values = vectors[vectorIndex].values;
         let deltaX = pixelsX / (length-1);
@@ -217,10 +262,8 @@ WosciSVGPlotter.prototype.drawDataVectorsSVG = function() {
             points.push([x, y]);
         }
         let path = "M" + points.map(p => p[0]+","+p[1]).join(" L");
-        /* TODO: generalize path handling */
-        let elPath = document.getElementById(`svg-path-${vectorIndex+1}`)
-        elPath.setAttribute("d", path)
-        // elPath.setAttribute("style", "stroke: "+Wosci.settings.dataLineColor[vectorIndex]+";");
+        /* TODO: why are the paths not updating? */
+        Wosci.ui.elSVGPaths[vectorIndex].setAttributeNS(null, "d", path)
     }
 }
 

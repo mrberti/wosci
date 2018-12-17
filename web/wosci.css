@@ -298,28 +298,80 @@ SCALES
 /*
 Channel definitions
 */
-#svg-path-1,
-.ch1 path,
-.ch1 line
+.ch1,
+.ch1 input
 {
+    fill: #06f;
     stroke: #06f;
     color: #06f;
 }
 .ch1 text {
-    fill: #06f;
-}
-.ch1 input {
-    color: #06f;
+    stroke: none;
 }
 
-#svg-path-2,
-.ch2 path,
-.ch2 line {
-    stroke: #F60;
+.ch2,
+.ch2 input
+{
+    fill: #ff4400;
+    stroke: #ff4400;
+    color: #ff4400;
 }
 .ch2 text {
-    fill: #F60;
+    stroke: none;
 }
-.ch2 input {
-    color: #F60;
+
+.ch3,
+.ch3 input
+{
+    fill: #ffcc00;
+    stroke: #ffcc00;
+    color: #ffcc00;
+}
+.ch3 text {
+    stroke: none;
+}
+
+.ch4,
+.ch4 input
+{
+    fill: #009900;
+    stroke: #009900;
+    color: #009900;
+}
+.ch4 text {
+    stroke: none;
+}
+
+.ch5,
+.ch5 input
+{
+    fill: #cc00ff;
+    stroke: #cc00ff;
+    color: #cc00ff;
+}
+
+.ch5 text {
+    stroke: none;
+}
+
+.ch6,
+.ch6 input
+{
+    fill: #00b8e6;
+    stroke: #00b8e6;
+    color: #00b8e6;
+}
+.ch6 text {
+    stroke: none;
+}
+
+.ch7,
+.ch7 input
+{
+    fill: #ff8000;
+    stroke: #ff8000;
+    color: #ff8000;
+}
+.ch7 text {
+    stroke: none;
 }
