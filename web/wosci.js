@@ -31,8 +31,8 @@ function WosciUI() {
     this.elBtnClose = document.getElementById("btnClose");
     this.elEdRemoteAddress = document.getElementById("edRemoteAddress");
     this.elEdRemotePort = document.getElementById("edRemotePort");
-    this.elYLimMin = document.getElementById("edYLimMin");
-    this.elYLimMax = document.getElementById("edYLimMax");
+    this.elYLimMin = document.getElementById("edYLimMinCh1");
+    this.elYLimMax = document.getElementById("edYLimMaxCh1");
     this.elEnableGrid = document.getElementById("cbEnableGrid");
     this.elMessageList = document.getElementById("message-list");
     this.elLogo = document.getElementById("logo");
@@ -44,9 +44,13 @@ function WosciUI() {
     /* Axes control */
     this.elNumAxes = document.getElementById("edNumAxes");
 
-    /* svg plotter traces */
+    /* svg plotter */
+    this.elPlotterMain = document.getElementById("plotter-main");
     this.elSVGTraces = document.getElementById("svg-plotter-traces")
     this.elSVGPaths = this.elSVGTraces.querySelectorAll("path");
+
+    /* Y-scales */
+    this.elPlotterColContainer = document.getElementById("plotter-col-container");
 
     /* When logo clicked => toggle sidebar */
     this.elLogo.onclick = function() {
@@ -68,12 +72,7 @@ function WosciUI() {
     }.bind(this);
 
     /* When Scale Y clicked => hide*/
-    let els = document.querySelectorAll(".scale-y-click");
-    els.forEach(el => {
-        el.onclick = function() {
-            el.parentElement.classList.toggle("hidden");
-        }
-    });
+    this.addEventsScaleYClicked();
 
     /* Number of axes has been changed => add or remove axes */
     this.numAxes = 1;
@@ -93,16 +92,36 @@ function WosciUI() {
     }.bind(this);
 }
 
+WosciUI.prototype.addEventsScaleYClicked = function() {
+    let els = document.querySelectorAll(".scale-y-click");
+    els.forEach(el => {
+        el.onclick = function() {
+            el.parentElement.classList.toggle("hidden");
+        }
+    });
+}
+
 WosciUI.prototype.addAxis = function(channel) {
+    /* Add paths */
     var svgNS = "http://www.w3.org/2000/svg";
     let elNewPath = document.createElementNS(svgNS, "path");
     let className = "ch" + channel;
     elNewPath.setAttributeNS(null, "class", className);
     this.elSVGPaths[0].parentElement.appendChild(elNewPath);
     this.elSVGPaths = this.elSVGTraces.querySelectorAll("path")
+
+    /* Adding scales */
+    let elFirstScale = this.elPlotterColContainer.childNodes[1];
+    let elNewScale = elFirstScale.cloneNode(true);
+    elNewScale.className = className;
+    elNewScale.querySelectorAll(".y-lim-max")[0].id = "edYLimMaxCh" + channel;
+    elNewScale.querySelectorAll(".y-lim-min")[0].id = "edYLimMinCh" + channel;
+    this.elPlotterColContainer.insertBefore(elNewScale, this.elPlotterMain);
+    this.addEventsScaleYClicked();
 }
 
 WosciUI.prototype.removeAxis = function (channel) {
+    /* Remove paths */
     this.elSVGPaths.forEach(el => {
         let channelNumber = el.getAttributeNS(null, "class").match(/\d+/);
         if (channelNumber == channel) {
@@ -110,10 +129,17 @@ WosciUI.prototype.removeAxis = function (channel) {
         }
     });
     this.elSVGPaths = this.elSVGTraces.querySelectorAll("path")
+
+    /* remove scales */
+    this.elPlotterColContainer.querySelector(".ch" + channel).remove();
 }
 
-WosciUI.prototype.getYLimits = function() {
-    return [this.elYLimMin.value, this.elYLimMax.value];
+WosciUI.prototype.getYLimits = function(channel) {
+    let idMax = "edYLimMaxCh" + channel;
+    let idMin = "edYLimMinCh" + channel;
+    let elYLimMax = document.getElementById(idMax);
+    let elYLimMin = document.getElementById(idMin);
+    return [elYLimMin.value, elYLimMax.value];
 }
 
 WosciUI.prototype.getPlotterBBox = function() {
@@ -244,14 +270,18 @@ WosciSVGPlotter.prototype.drawDataVectorsSVG = function() {
 
     let pixelsX = Wosci.ui.getPlotterBBox().width;
     let pixelsY = Wosci.ui.getPlotterBBox().height;
-    let yLimMin = Wosci.ui.getYLimits()[0];
-    let yLimMax = Wosci.ui.getYLimits()[1];
-    let yLimDelta = yLimMax - yLimMin;
 
     for(let vectorIndex = 0; vectorIndex < vectorCount; vectorIndex++) {
         if (vectorIndex >= Wosci.ui.numAxes) {
             break;
         }
+
+        let yLimMin = Wosci.ui.getYLimits(vectorIndex + 1)[0];
+        let yLimMax = Wosci.ui.getYLimits(vectorIndex + 1)[1];
+        let yLimDelta = yLimMax - yLimMin;
+    
+        if (yLimDelta == 0) { continue; };
+
         let length = vectors[vectorIndex].length;
         let values = vectors[vectorIndex].values;
         let deltaX = pixelsX / (length-1);

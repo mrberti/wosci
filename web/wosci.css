@@ -375,3 +375,36 @@ Channel definitions
 .ch7 text {
     stroke: none;
 }
+
+.ch8,
+.ch8 input
+{
+    fill: #00cc00;
+    stroke: #00cc00;
+    color: #00cc00;
+}
+.ch8 text {
+    stroke: none;
+}
+
+.ch9,
+.ch9 input
+{
+    fill: #e6005c;
+    stroke: #e6005c;
+    color: #e6005c;
+}
+.ch9 text {
+    stroke: none;
+}
+
+.ch10,
+.ch10 input
+{
+    fill: #d9d9d9;
+    stroke: #d9d9d9;
+    color: #d9d9d9;
+}
+.ch10 text {
+    stroke: none;
+}
