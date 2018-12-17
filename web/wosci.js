@@ -90,6 +90,64 @@ function WosciUI() {
             }
         }
     }.bind(this);
+
+    /* 
+    !!DANGER AREA! KEEP OUT!!
+    */
+    /* Test: scroll y scales */
+    this.elPlotterColContainer.childNodes[1].onwheel = function(event) {
+        // console.log(event.deltaY);
+        event.preventDefault();
+        let elMax = document.getElementById("edYLimMaxCh1");
+        let elMin = document.getElementById("edYLimMinCh1");
+        elMax.value *= (event.deltaY > 1 ? 1.1 : 0.9).toPrecision(4);
+        elMin.value *= (event.deltaY > 1 ? 1.1 : 0.9).toPrecision(4);
+    }
+
+    this.elPlotterColContainer.childNodes[1].ondblclick = function(event) {
+        // console.log(event.deltaY);
+        event.preventDefault();
+        let elMax = document.getElementById("edYLimMaxCh1");
+        let elMin = document.getElementById("edYLimMinCh1");
+        let max = Math.max.apply(null, Wosci.websocket.getDataVectors().vectors[0].values);
+        let min = Math.min.apply(null, Wosci.websocket.getDataVectors().vectors[0].values);
+        elMin.value = min;
+        elMax.value = max;
+    }
+
+    this.elPlotterColContainer.childNodes[1].onmousedown= function(event) {
+        // console.log(event);
+        // let startX = event.clientX;
+        let startY = event.clientY;
+        let elMax = document.getElementById("edYLimMaxCh1");
+        let elMin = document.getElementById("edYLimMinCh1");
+        let startMax = elMax.value;
+        let startMin = elMin.value;
+        let yLims = this.getYLimits(1);
+        let pixelsY = this.getPlotterBBox().height;
+        let yLimDiff = yLims[1] - yLims[0];
+        let scale = yLimDiff/pixelsY;
+        // console.log(scale);
+        document.body.style.cursor = "n-resize";
+
+        document.onmousemove = function(event2) {
+            // console.log(event2);
+            // event2.preventDefault();
+            let dY = Math.round((startY-event2.clientY)*scale);
+            // console.log(dY);
+            elMax.value = startMax - dY;
+            elMin.value = startMin - dY;
+            // console.log(elMax.value);
+            // elMin.value *= event.deltaY > 1 ? 1.1 : .9;
+        }
+    }.bind(this);
+
+    document.onmouseup = function() {
+        document.onmousemove = function() {
+            document.body.style.cursor = "default";
+            return false;
+        }
+    }.bind(this);
 }
 
 WosciUI.prototype.addEventsScaleYClicked = function() {
