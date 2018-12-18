@@ -13,6 +13,7 @@
     "electron": "^3.0.10"
   },
   "dependencies": {
+    "serialport": "^7.1.0",
     "websocket": "^1.0.28"
   }
 }

@@ -8,9 +8,13 @@ module.exports = {
 const WebSocketServer = require("websocket").server;
 const http = require("http");
 const scpi = require("./scpi");
+const serial = require("./serial");
 
 let wsServer;
 let httpServer;
+
+let useSCPI = false;
+let useSerial = true;
 
 function createHTTPServer() {
     httpServer = new http.createServer( (request, response) => {
@@ -28,6 +32,10 @@ function createWebsocketServer() {
     })
     wsServer.on("request", messageHandler);
     console.log(new Date() + " WebSocket Server created");
+
+    if (useSerial) {
+        serial.openSerialPort("COM7", 500000);
+    }
 }
 
 function messageHandler(request) {
@@ -47,9 +55,11 @@ function messageHandler(request) {
 
     setTimeout(() => {
         setInterval(() => {
-            let data = scpi.getPacket();
+            let data = null
+            if (useSCPI) { data = scpi.getPacket(); }
+            if (useSerial) { data = serial.getPacket(); }
             connection.sendUTF(JSON.stringify(data));
-        }, 100);
+        }, 50);
     }, 1000);
 }
 
