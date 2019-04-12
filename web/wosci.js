@@ -353,6 +353,13 @@ WosciSVGPlotter.prototype.drawDataVectorsSVG = function() {
         /* TODO: why are the paths not updating? */
         Wosci.ui.elSVGPaths[vectorIndex].setAttributeNS(null, "d", path)
     }
+    let gaugeData = vectors[0].values[vectors[0].values.length - 1];
+    console.log(gaugeData);
+    let gaugeBar = document.getElementById("gauge-bar");
+    let gaugeWidth = String(gaugeData) + "%"
+    gaugeBar.setAttribute("width", gaugeWidth);
+    let gaugeText = String(Math.round(gaugeData*10)/10) + "&#x00B0;C";
+    document.getElementById("gauge-text").innerHTML = gaugeText;
 }
 
 WosciSVGPlotter.prototype.drawGrid = function() {

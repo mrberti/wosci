@@ -413,3 +413,10 @@ Channel definitions
 .ch10 text {
     stroke: none;
 }
+
+.gauge-text {
+    margin: 0px;
+    padding: 10px;
+    font-size: 70px;
+    text-align: center;
+}
