@@ -5,7 +5,6 @@ module.exports = {
 
 const net = require("net");
 
-let client = new net.Socket();
 let temps = [];
 
 let dataVectors = {
@@ -21,35 +20,48 @@ let packet = {
     "dataVectors": [dataVectors]
 }
 
-function getPacket() {
-    return packet;
-}
+let scpiPort = 5025
+let scpiHost = "192.168.1.91"
+let client = new net.Socket();
 
 client.setEncoding("utf8");
 
-client.connect(5025, "192.168.1.80", () => {
-    console.log("connected");
-})
-
 client.on("data", (data) => {
     let temp = parseFloat(data);
-    temp = temp;
-    if (temps.length > 1000) {
+    if (temps.length > 10000) {
         temps.shift();
     }
     temps.push(temp);
+    // console.log(temps.toString());
     packet.dataVectors[0].length = temps.length;
+    // packet.dataVectors[0].values = temps;
     // console.log(packet);
 })
 
 client.on("ready", () => {
-    setInterval( () => {client.write("MEAS:TEMP?\n");}, 100);
+    // console.log("onReady");
+    client.write("MEAS:TEMP?\n");
 })
 
-// client.on("timeout", () => {
-//     client.destroy();
-// })
+client.on("timeout", () => {
+    console.log("onTimeout")
+})
 
 client.on("error", (error) => {
-    console.log(error.toString());
+    // console.log("onError" + error.toString());
 })
+
+client.on("close", () => {
+    // console.log("onClose");
+});
+
+function getPacket() {
+    return packet;
+};
+
+// Test module
+// if(require.main === module) {
+    setInterval( () => {
+        client.connect(scpiPort, scpiHost);
+    }, 1000);
+// };
