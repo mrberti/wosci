@@ -16,6 +16,10 @@ let httpServer;
 let useSCPI = true;
 let useSerial = false;
 
+let settings = {
+    maxDataPoints: 1000,
+}
+
 function createHTTPServer() {
     httpServer = new http.createServer( (request, response) => {
         // Nothing to do here.
@@ -36,6 +40,13 @@ function createWebsocketServer() {
     if (useSerial) {
         serial.openSerialPort("COM7", 500000);
     }
+    if (useSCPI) {
+        scpi.start();
+    }
+}
+
+function updateSettings() {
+    scpi.maxDataPoints = settings.maxDataPoints;
 }
 
 function messageHandler(request) {
@@ -50,18 +61,31 @@ function messageHandler(request) {
     connection.sendUTF(JSON.stringify(welcomeMessage));
 
     connection.on("message", (message) => {
-        console.log(new Date() + " Received message: "+ message);
+        let data = message.utf8Data;
+        if (data.packetType == "setting") {
+            /* No sanity checking here... */
+            settings[data.setting] = data.value;
+            updateSettings();
+        }
+        console.log(new Date() + " Received message: " + data);
     })
 
-    setTimeout(() => {
-        setInterval(() => {
-            let data = null
-            if (useSCPI) { data = scpi.getPacket(); }
-            if (useSerial) { data = serial.getPacket(); }
-            connection.sendUTF(JSON.stringify(data));
-        }, 50);
-        // }, 1000);
-    }, 1000);
+    connection.on("close", () => {
+        console.log(new Date() + " Connection closed.");
+        if (useSCPI) {
+            scpi.events.off("new_data", sendData);
+        }
+    })
+
+    function sendData() {
+        let data = null;
+        if (useSCPI) { data = scpi.getPacket(); }
+        connection.sendUTF(JSON.stringify(data));
+    }
+
+    if (useSCPI) {
+        scpi.events.on("new_data", sendData)
+    }
 }
 
 function shutdown() {
@@ -70,6 +94,9 @@ function shutdown() {
     wsServer = null;
     httpServer.close();
     httpServer = null;
+    if (useSCPI) {
+        scpi.stop();
+    }
 }
 
 // Test module

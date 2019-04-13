@@ -1,11 +1,19 @@
 "use strict";
+const net = require("net");
+const EventEmitter  = require("events");
+const fs = require("fs");
+const events = new EventEmitter();
+let maxDataPoints = 10000;
+
 module.exports = {
     getPacket: getPacket,
+    start: start,
+    stop: stop,
+    events: events,
+    maxDataPoints: maxDataPoints,
 }
 
-const net = require("net");
-
-let temps = [];
+let temps = Array(maxDataPoints).fill(NaN);
 
 let dataVectors = {
     "label": "label",
@@ -23,19 +31,23 @@ let packet = {
 let scpiPort = 5025
 let scpiHost = "192.168.1.91"
 let client = new net.Socket();
+let logFile = "log.txt"
+// let logFile = null;
 
 client.setEncoding("utf8");
 
 client.on("data", (data) => {
     let temp = parseFloat(data);
-    if (temps.length > 10000) {
+    if (temps.length > maxDataPoints) {
         temps.shift();
     }
     temps.push(temp);
-    // console.log(temps.toString());
     packet.dataVectors[0].length = temps.length;
-    // packet.dataVectors[0].values = temps;
-    // console.log(packet);
+    events.emit("new_data");
+    if (logFile) {
+        let writeString = Date.now() + "," + temp + "\n";
+        fs.writeFile(logFile, writeString, {flag: "a+"}, (err) => {});
+    }
 })
 
 client.on("ready", () => {
@@ -59,9 +71,18 @@ function getPacket() {
     return packet;
 };
 
-// Test module
-// if(require.main === module) {
-    setInterval( () => {
+var timer = null;
+function start() {
+    timer = setInterval( () => {
         client.connect(scpiPort, scpiHost);
     }, 1000);
+};
+
+function stop() {
+    clearInterval(timer);
+}
+
+// Test module
+// if(require.main === module) {
+
 // };
