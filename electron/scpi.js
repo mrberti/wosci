@@ -3,7 +3,7 @@ const net = require("net");
 const EventEmitter  = require("events");
 const fs = require("fs");
 const events = new EventEmitter();
-let maxDataPoints = 10000;
+let maxDataPoints = 7200;
 
 module.exports = {
     getPacket: getPacket,
