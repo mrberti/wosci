@@ -27,13 +27,16 @@ function WosciSettings() {
  * WosciUI
  */
 function WosciUI() {
+    /* document objects */
     this.elBtnConnect = document.getElementById("btnConnect");
     this.elBtnClose = document.getElementById("btnClose");
     this.elEdRemoteAddress = document.getElementById("edRemoteAddress");
     this.elEdRemotePort = document.getElementById("edRemotePort");
+    this.elEdNumDatapoints = document.getElementById("edNumDatapoints");
     this.elYLimMin = document.getElementById("edYLimMinCh1");
     this.elYLimMax = document.getElementById("edYLimMaxCh1");
     this.elEnableGrid = document.getElementById("cbEnableGrid");
+    this.elEnableAutoscale = document.getElementById("cbEnableAutoscale");
     this.elMessageList = document.getElementById("message-list");
     this.elLogo = document.getElementById("logo");
     this.elSidebar = document.getElementById("sidebar");
@@ -52,6 +55,15 @@ function WosciUI() {
     /* Y-scales */
     this.elPlotterColContainer = document.getElementById("plotter-col-container");
 
+    /***************************
+    UI states
+    ****************************/
+    this.isEnableAutoscale = this.elEnableAutoscale.checked;
+    this.numDatapoints = this.elEdNumDatapoints.value
+
+    /***************************
+    Behaviour
+    ****************************/
     /* When logo clicked => toggle sidebar */
     this.elLogo.onclick = function() {
         this.elSidebar.classList.toggle("hidden");
@@ -91,6 +103,21 @@ function WosciUI() {
         }
     }.bind(this);
 
+    this.elEnableAutoscale.onchange = function() {
+        this.isEnableAutoscale = this.elEnableAutoscale.checked;
+        console.log("Enable Autoscale: " + this.isEnableAutoscale);
+    }.bind(this);
+
+    this.elEdNumDatapoints.onchange = function() {
+        this.numDatapoints = this.elEdNumDatapoints.value;
+        let message = {
+            packetType: "setting",
+            setting: "maxDataPoints",
+            value: this.numDatapoints,
+        };
+        Wosci.websocket.sendMessage(message);
+    }.bind(this);
+
     /* 
     !!DANGER AREA! KEEP OUT!!
     */
@@ -105,14 +132,8 @@ function WosciUI() {
     }
 
     this.elPlotterColContainer.childNodes[1].ondblclick = function(event) {
-        // console.log(event.deltaY);
         event.preventDefault();
-        let elMax = document.getElementById("edYLimMaxCh1");
-        let elMin = document.getElementById("edYLimMinCh1");
-        let max = Math.max.apply(null, Wosci.websocket.getDataVectors().vectors[0].values);
-        let min = Math.min.apply(null, Wosci.websocket.getDataVectors().vectors[0].values);
-        elMin.value = min;
-        elMax.value = max;
+        Wosci.SVGPlotter.autoscaleY();
     }
 
     this.elPlotterColContainer.childNodes[1].onmousedown= function(event) {
@@ -257,6 +278,8 @@ WosciWebSocket.prototype.messageHandler = function (event) {
         dataVectors.vectors = packet["dataVectors"];
         this.dataVectors = dataVectors;
     }
+
+    Wosci.SVGPlotter.draw()
 }
 
 WosciWebSocket.prototype.connect = function(remoteAddress, remotePort) {
@@ -294,6 +317,11 @@ WosciWebSocket.prototype.getDataVectors = function() {
     return this.dataVectors;
 }
 
+WosciWebSocket.prototype.sendMessage = function(message) {
+    this.webSocket.send(JSON.stringify(message));
+    console.log(JSON.stringify(message));
+}
+
 WosciWebSocket.prototype.close = function() {
     try { 
         this.webSocket.close();
@@ -316,7 +344,7 @@ WosciSVGPlotter.prototype.draw = function() {
     // this.drawGrid();
     // this.drawAxes();
     this.drawDataVectorsSVG();
-    window.requestAnimationFrame(this.draw.bind(this));
+    // window.requestAnimationFrame(this.draw.bind(this));
 }
 
 WosciSVGPlotter.prototype.drawDataVectorsSVG = function() {
@@ -345,6 +373,7 @@ WosciSVGPlotter.prototype.drawDataVectorsSVG = function() {
         let deltaX = pixelsX / (length-1);
         let points = []
         for(let i = 0; i < length; i++) {
+            if (values[i] === null) { continue };
             let y = Math.round(( pixelsY - (values[i] - yLimMin) / yLimDelta * pixelsY));
             let x = Math.round(i * deltaX)
             points.push([x, y]);
@@ -354,12 +383,16 @@ WosciSVGPlotter.prototype.drawDataVectorsSVG = function() {
         Wosci.ui.elSVGPaths[vectorIndex].setAttributeNS(null, "d", path)
     }
     let gaugeData = vectors[0].values[vectors[0].values.length - 1];
-    console.log(gaugeData);
     let gaugeBar = document.getElementById("gauge-bar");
     let gaugeWidth = String(gaugeData) + "%"
     gaugeBar.setAttribute("width", gaugeWidth);
     let gaugeText = String(Math.round(gaugeData*10)/10) + "&#x00B0;C";
     document.getElementById("gauge-text").innerHTML = gaugeText;
+
+    /* Autoscale */
+    if (Wosci.ui.isEnableAutoscale) {
+        Wosci.SVGPlotter.autoscaleY();
+    }
 }
 
 WosciSVGPlotter.prototype.drawGrid = function() {
@@ -394,6 +427,24 @@ WosciSVGPlotter.prototype.drawAxes = function() {
     // ctx.fillText(`${yLimMax}`, 2, 12);
     // ctx.fillText(`${yLimMin}`, 2, N_y-2);
     // ctx.fillText(`${yLimHalf}`, 2, N_y/2 - 5);
+}
+
+WosciSVGPlotter.prototype.autoscaleY = function() {
+    /* TODO: currently only one axe is scaled... */
+    let elMax = document.getElementById("edYLimMaxCh1");
+    let elMin = document.getElementById("edYLimMinCh1");
+    let values = Wosci.websocket.getDataVectors().vectors[0].values;
+    let max = null;
+    let min = null;
+    for (let i=1; i < values.length; i++) {
+        let val = values[i];
+        if (val != null) {
+            if ((max === null) || (val > max)) { max = val; }
+            if ((min === null) || (val < min)) { min = val; }
+        }
+    }
+    elMin.value = min;
+    elMax.value = max;
 }
 
 /******************************************************************************

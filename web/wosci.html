@@ -19,7 +19,8 @@
               <input id="edRemotePort" type="number" value="5678" style="width: 50px;">
               <input id="btnConnect" type="button" value="&#9654; Connect">
               <input id="btnClose" type="button" value="&#9632; Close">
-              <input id="edNumAxes" type="number" value="1" min="1" max="10">
+              <input id="edNumAxes" type="number" value="1" min="1" max="10">Axes
+              <input id="edNumDatapoints" type="number" value="1000" min="1" max="10000">Datapoints
             </li>
           </ul>
         </div>
@@ -127,9 +128,10 @@
       </div>
 
       <div class="ui">
-          <label class="badge" for="edYLimMin">Y-Min</label><input id="edYLimMin2" type="number" value="0" step="any" style="width: 50px;"><br>
-          <label class="badge" for="edYLimMax">Y-Max</label><input id="edYLimMax2" type="number" value="100" step="any" style="width: 50px;"><br>
-          <label class="badge" for="cbEnableGrid">Enable Grid</label><input id="cbEnableGrid" type=checkbox value="Enable Grid"><br>
+        <label class="badge" for="cbEnableAutoscale">Enable Autoscale</label><input id="cbEnableAutoscale" type=checkbox value="Enable Autoscale"><br>
+        <!-- <label class="badge" for="edYLimMin">Y-Min</label><input id="edYLimMin2" type="number" value="0" step="any" style="width: 50px;"><br> -->
+        <!-- <label class="badge" for="edYLimMax">Y-Max</label><input id="edYLimMax2" type="number" value="100" step="any" style="width: 50px;"><br> -->
+        <label class="badge" for="cbEnableGrid">Enable Grid</label><input id="cbEnableGrid" type=checkbox value="Enable Grid"><br>
       </div>
       <div class="data">
         <p id="p1" class="data">no data</p>
